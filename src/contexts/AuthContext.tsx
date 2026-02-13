@@ -32,13 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfileAndRole = async (userId: string) => {
+  const fetchProfileAndRole = async (userId: string): Promise<boolean> => {
     const [profileRes, roleRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", userId).single(),
       supabase.from("user_roles").select("role").eq("user_id", userId).single(),
     ]);
-    if (profileRes.data) setProfile(profileRes.data as Profile);
+    if (profileRes.data) {
+      if (!profileRes.data.is_active) {
+        return false; // deactivated
+      }
+      setProfile(profileRes.data as Profile);
+    }
     if (roleRes.data) setRole(roleRes.data.role as AppRole);
+    return true;
   };
 
   useEffect(() => {
@@ -69,8 +75,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error as Error | null };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error as Error | null };
+    
+    // Check if user is active
+    if (data.user) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("is_active")
+        .eq("user_id", data.user.id)
+        .single();
+      
+      if (profileData && !profileData.is_active) {
+        await supabase.auth.signOut();
+        return { error: new Error("Вашият акаунт е деактивиран. Свържете се с администратора.") };
+      }
+    }
+    
+    return { error: null };
   };
 
   const signOut = async () => {
