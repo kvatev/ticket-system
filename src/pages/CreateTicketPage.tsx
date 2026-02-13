@@ -109,7 +109,12 @@ export default function CreateTicketPage() {
                       <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+              </Select>
+                {departmentId && (
+                  <p className="text-xs text-muted-foreground">
+                    Заявката ще бъде видима за всички служители в този отдел.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
