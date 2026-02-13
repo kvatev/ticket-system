@@ -7,7 +7,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -16,7 +16,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify caller is admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -27,7 +26,7 @@ Deno.serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
+
     if (authError || !caller) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -35,25 +34,47 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if caller is admin (skip for seed mode)
-    const { email, password, full_name, role, department_id, seed } = await req.json();
+    // Verify caller is admin
+    const { data: callerRole } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", caller.id)
+      .single();
 
-    if (!seed) {
-      const { data: callerRole } = await supabaseAdmin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", caller.id)
-        .single();
+    if (callerRole?.role !== "admin") {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-      if (callerRole?.role !== "admin") {
-        return new Response(JSON.stringify({ error: "Forbidden" }), {
-          status: 403,
+    const { action, user_id, role, email, password, full_name, department_id } = await req.json();
+
+    // UPDATE ROLE
+    if (action === "update_role") {
+      if (!user_id || !role) {
+        return new Response(JSON.stringify({ error: "Missing user_id or role" }), {
+          status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .update({ role })
+        .eq("user_id", user_id);
+
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Validate email domain
+    // CREATE USER
     if (!email?.endsWith("@edu.mon.bg")) {
       return new Response(JSON.stringify({ error: "Имейлът трябва да е @edu.mon.bg" }), {
         status: 400,
@@ -61,7 +82,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create user with auto-confirm
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -75,7 +95,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create profile
     await supabaseAdmin.from("profiles").insert({
       user_id: newUser.user!.id,
       full_name,
@@ -83,7 +102,6 @@ Deno.serve(async (req) => {
       department_id: department_id || null,
     });
 
-    // Assign role
     await supabaseAdmin.from("user_roles").insert({
       user_id: newUser.user!.id,
       role: role || "user",

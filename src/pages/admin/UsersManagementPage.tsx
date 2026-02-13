@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Pencil } from "lucide-react";
+
+const roleLabels: Record<string, string> = {
+  admin: "Администратор",
+  staff: "Учител ИТ",
+  user: "Учител",
+};
 
 export default function UsersManagementPage() {
   const { user } = useAuth();
@@ -25,6 +31,11 @@ export default function UsersManagementPage() {
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState("user");
   const [newDeptId, setNewDeptId] = useState("");
+
+  // Role edit
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editRole, setEditRole] = useState("");
+  const [savingRole, setSavingRole] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -56,7 +67,6 @@ export default function UsersManagementPage() {
       return;
     }
     setLoading(true);
-
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const response = await fetch(
@@ -83,11 +93,7 @@ export default function UsersManagementPage() {
       } else {
         toast.success("Потребителят е създаден успешно!");
         setDialogOpen(false);
-        setNewEmail("");
-        setNewName("");
-        setNewPassword("");
-        setNewRole("user");
-        setNewDeptId("");
+        setNewEmail(""); setNewName(""); setNewPassword(""); setNewRole("user"); setNewDeptId("");
         fetchData();
       }
     } catch (err: any) {
@@ -96,10 +102,34 @@ export default function UsersManagementPage() {
     setLoading(false);
   };
 
-  const roleLabels: Record<string, string> = {
-    admin: "Администратор",
-    staff: "Персонал",
-    user: "Потребител",
+  const handleUpdateRole = async (userId: string) => {
+    setSavingRole(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ action: "update_role", user_id: userId, role: editRole }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error("Грешка при промяна на роля", { description: result.error });
+      } else {
+        toast.success("Ролята е променена успешно!");
+        setEditingUserId(null);
+        fetchData();
+      }
+    } catch (err: any) {
+      toast.error("Грешка", { description: err.message });
+    }
+    setSavingRole(false);
   };
 
   return (
@@ -133,8 +163,8 @@ export default function UsersManagementPage() {
                   <Select value={newRole} onValueChange={setNewRole}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">Потребител</SelectItem>
-                      <SelectItem value="staff">Персонал</SelectItem>
+                      <SelectItem value="user">Учител</SelectItem>
+                      <SelectItem value="staff">Учител ИТ</SelectItem>
                       <SelectItem value="admin">Администратор</SelectItem>
                     </SelectContent>
                   </Select>
@@ -178,9 +208,38 @@ export default function UsersManagementPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={roles[p.user_id] === "admin" ? "default" : "secondary"}>
-                      {roleLabels[roles[p.user_id]] ?? "Без роля"}
-                    </Badge>
+                    {editingUserId === p.user_id ? (
+                      <div className="flex items-center gap-2">
+                        <Select value={editRole} onValueChange={setEditRole}>
+                          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">Учител</SelectItem>
+                            <SelectItem value="staff">Учител ИТ</SelectItem>
+                            <SelectItem value="admin">Администратор</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button size="sm" onClick={() => handleUpdateRole(p.user_id)} disabled={savingRole}>
+                          {savingRole ? <Loader2 className="h-4 w-4 animate-spin" /> : "Запази"}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingUserId(null)}>Отказ</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <Badge variant={roles[p.user_id] === "admin" ? "default" : roles[p.user_id] === "staff" ? "outline" : "secondary"}>
+                          {roleLabels[roles[p.user_id]] ?? "Без роля"}
+                        </Badge>
+                        {p.user_id !== user?.id && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={() => { setEditingUserId(p.user_id); setEditRole(roles[p.user_id] || "user"); }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </>
+                    )}
                     {!p.is_active && (
                       <Badge variant="destructive">Деактивиран</Badge>
                     )}

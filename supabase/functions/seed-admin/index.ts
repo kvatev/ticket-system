@@ -7,7 +7,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -24,6 +24,20 @@ Deno.serve(async (req) => {
       .limit(1);
 
     if (existingAdmins && existingAdmins.length > 0) {
+      // If admin exists, just confirm unconfirmed users (one-time fix)
+      const { email } = await req.json();
+      if (email) {
+        const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+        const targetUser = users?.users?.find((u: any) => u.email === email);
+        if (targetUser && !targetUser.email_confirmed_at) {
+          await supabaseAdmin.auth.admin.updateUserById(targetUser.id, {
+            email_confirm: true,
+          });
+          return new Response(JSON.stringify({ success: true, action: "confirmed" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
       return new Response(JSON.stringify({ error: "Admin already exists" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -32,7 +46,6 @@ Deno.serve(async (req) => {
 
     const { email, password, full_name } = await req.json();
 
-    // Create admin user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -46,7 +59,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create profile + role
     await supabaseAdmin.from("profiles").insert({
       user_id: newUser.user!.id,
       full_name,
