@@ -229,7 +229,7 @@ export default function UsersManagementPage() {
           />
         </div>
         <Select value={filterRole} onValueChange={setFilterRole}>
-          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Всички роли</SelectItem>
             <SelectItem value="admin">Администратор</SelectItem>
@@ -238,7 +238,7 @@ export default function UsersManagementPage() {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Всички статуси</SelectItem>
             <SelectItem value="active">Активни</SelectItem>
@@ -254,21 +254,21 @@ export default function UsersManagementPage() {
               <p className="py-12 text-center text-muted-foreground">Няма намерени потребители.</p>
             ) : (
               filteredProfiles.map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                <div key={p.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                       {p.full_name?.charAt(0)}
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{p.full_name}</p>
-                      <p className="text-xs text-muted-foreground">{p.email}</p>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-foreground">{p.full_name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{p.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     {editingUserId === p.user_id ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Select value={editRole} onValueChange={setEditRole}>
-                          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="user">Учител</SelectItem>
                             <SelectItem value="staff">Учител ИТ</SelectItem>
