@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Loader2, Pencil } from "lucide-react";
+import { UserPlus, Loader2, Pencil, Ban, CheckCircle } from "lucide-react";
 
 const roleLabels: Record<string, string> = {
   admin: "Администратор",
@@ -132,6 +133,20 @@ export default function UsersManagementPage() {
     setSavingRole(false);
   };
 
+  const handleToggleActive = async (profile: any) => {
+    const newStatus = !profile.is_active;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_active: newStatus })
+      .eq("id", profile.id);
+    if (error) {
+      toast.error("Грешка при промяна на статус", { description: error.message });
+    } else {
+      toast.success(newStatus ? "Потребителят е активиран!" : "Потребителят е деактивиран!");
+      fetchData();
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -229,14 +244,45 @@ export default function UsersManagementPage() {
                           {roleLabels[roles[p.user_id]] ?? "Без роля"}
                         </Badge>
                         {p.user_id !== user?.id && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => { setEditingUserId(p.user_id); setEditRole(roles[p.user_id] || "user"); }}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => { setEditingUserId(p.user_id); setEditRole(roles[p.user_id] || "user"); }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className={`h-8 w-8 ${p.is_active ? "text-destructive hover:text-destructive" : "text-green-600 hover:text-green-700"}`}
+                                >
+                                  {p.is_active ? <Ban className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    {p.is_active ? "Деактивиране на потребител" : "Активиране на потребител"}
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {p.is_active
+                                      ? `Сигурни ли сте, че искате да деактивирате ${p.full_name}? Потребителят няма да може да влиза в системата.`
+                                      : `Сигурни ли сте, че искате да активирате ${p.full_name}?`}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Отказ</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleToggleActive(p)}>
+                                    {p.is_active ? "Деактивирай" : "Активирай"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
                         )}
                       </>
                     )}
