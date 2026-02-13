@@ -57,6 +57,9 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Система за заявки
           </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Вход само с <span className="font-semibold text-foreground">@edu.mon.bg</span> акаунт
+          </p>
         </div>
 
         <Card className="border-border shadow-lg">
@@ -73,7 +76,7 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="ime@school.bg"
+                    placeholder="krasimir.vatev@edu.mon.bg"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -99,7 +102,7 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="ime@school.bg"
+                    placeholder="krasimir.vatev@edu.mon.bg"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -135,9 +138,11 @@ export default function LoginPage() {
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Достъпът е само за оторизирани потребители.
+          Достъпът е само за оторизирани потребители с <strong>@edu.mon.bg</strong> акаунт.
           <br />
-          Свържете се с администратора за акаунт.
+          Пример: <span className="font-mono text-foreground/70">krasimir.vatev@edu.mon.bg</span>
+          <br />
+          Свържете се с администратора за създаване на акаунт.
         </p>
       </div>
     </div>
