@@ -51,54 +51,47 @@ export default function UsersManagementPage() {
       toast.error("Моля, попълнете всички полета.");
       return;
     }
+    if (!newEmail.endsWith("@edu.mon.bg")) {
+      toast.error("Имейлът трябва да завършва с @edu.mon.bg");
+      return;
+    }
     setLoading(true);
 
-    // We need an edge function to create users as admin
-    // For now, use supabase auth admin (requires service role - will use edge function)
-    // Temporary: sign up via client (won't work without auto-confirm)
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: newEmail,
-      password: newPassword,
-      options: { emailRedirectTo: window.location.origin },
-    });
-
-    if (authError || !authData.user) {
-      toast.error("Грешка при създаване на акаунт", { description: authError?.message });
-      setLoading(false);
-      return;
-    }
-
-    // Create profile
-    const { error: profileError } = await supabase.from("profiles").insert({
-      user_id: authData.user.id,
-      full_name: newName,
-      email: newEmail,
-      department_id: newDeptId || null,
-    });
-
-    if (profileError) {
-      toast.error("Грешка при създаване на профил", { description: profileError.message });
-      setLoading(false);
-      return;
-    }
-
-    // Assign role
-    const { error: roleError } = await supabase.from("user_roles").insert({
-      user_id: authData.user.id,
-      role: newRole as any,
-    });
-
-    if (roleError) {
-      toast.error("Грешка при задаване на роля", { description: roleError.message });
-    } else {
-      toast.success("Потребителят е създаден успешно!");
-      setDialogOpen(false);
-      setNewEmail("");
-      setNewName("");
-      setNewPassword("");
-      setNewRole("user");
-      setNewDeptId("");
-      fetchData();
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            email: newEmail,
+            password: newPassword,
+            full_name: newName,
+            role: newRole,
+            department_id: newDeptId || null,
+          }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error("Грешка при създаване", { description: result.error });
+      } else {
+        toast.success("Потребителят е създаден успешно!");
+        setDialogOpen(false);
+        setNewEmail("");
+        setNewName("");
+        setNewPassword("");
+        setNewRole("user");
+        setNewDeptId("");
+        fetchData();
+      }
+    } catch (err: any) {
+      toast.error("Грешка при създаване", { description: err.message });
     }
     setLoading(false);
   };
@@ -128,7 +121,7 @@ export default function UsersManagementPage() {
               </div>
               <div className="space-y-2">
                 <Label>Имейл *</Label>
-                <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="ivan@school.bg" required />
+                <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="krasimir.vatev@edu.mon.bg" required />
               </div>
               <div className="space-y-2">
                 <Label>Парола *</Label>
