@@ -6,14 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, School, KeyRound } from "lucide-react";
+import { Loader2, School, KeyRound, UserPlus } from "lucide-react";
+
+type Mode = "login" | "register" | "forgot";
 
 export default function LoginPage() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [forgotMode, setForgotMode] = useState(false);
+  const [mode, setMode] = useState<Mode>("login");
+
+  const validateEmail = (val: string) => {
+    if (!val.endsWith("@edu.mon.bg")) {
+      toast.error("Имейлът трябва да завършва с @edu.mon.bg");
+      return false;
+    }
+    return true;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +32,33 @@ export default function LoginPage() {
     const { error } = await signIn(email, password);
     if (error) {
       toast.error("Грешка при вход", { description: "Невалиден имейл или парола." });
+    }
+    setLoading(false);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateEmail(email)) return;
+    if (!fullName.trim()) {
+      toast.error("Моля, въведете вашето име.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: { full_name: fullName.trim() },
+      },
+    });
+    if (error) {
+      toast.error("Грешка при регистрация", { description: error.message });
+    } else {
+      toast.success("Регистрацията е успешна!", {
+        description: "Проверете имейла си за потвърждение.",
+      });
+      setMode("login");
     }
     setLoading(false);
   };
@@ -39,9 +77,15 @@ export default function LoginPage() {
       toast.error("Грешка", { description: error.message });
     } else {
       toast.success("Изпратихме линк за нулиране на паролата на вашия имейл.");
-      setForgotMode(false);
+      setMode("login");
     }
     setLoading(false);
+  };
+
+  const titles: Record<Mode, string> = {
+    login: "Вход в системата",
+    register: "Регистрация",
+    forgot: "Забравена парола",
   };
 
   return (
@@ -54,95 +98,93 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-foreground">
             СУ „Константин Петканов"
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Система за заявки
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Система за заявки</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Вход само с <span className="font-semibold text-foreground">@edu.mon.bg</span> акаунт
+            Само с <span className="font-semibold text-foreground">@edu.mon.bg</span> акаунт
           </p>
         </div>
 
         <Card className="border-border shadow-lg">
           <CardHeader className="pb-4 pt-6">
             <h2 className="text-center text-lg font-semibold text-foreground">
-              {forgotMode ? "Забравена парола" : "Вход в системата"}
+              {titles[mode]}
             </h2>
           </CardHeader>
           <CardContent>
-            {forgotMode ? (
+            {mode === "forgot" && (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Имейл адрес</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="krasimir.vatev@edu.mon.bg"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                  <Label htmlFor="forgotEmail">Имейл адрес</Label>
+                  <Input id="forgotEmail" type="email" placeholder="krasimir.vatev@edu.mon.bg" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Изпрати линк
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setForgotMode(false)}
-                >
+                <Button type="button" variant="ghost" className="w-full" onClick={() => setMode("login")}>
                   Обратно към вход
                 </Button>
               </form>
-            ) : (
-              <form onSubmit={handleLogin} className="space-y-4">
+            )}
+
+            {mode === "register" && (
+              <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Имейл адрес</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="krasimir.vatev@edu.mon.bg"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                  <Label htmlFor="fullName">Пълно име *</Label>
+                  <Input id="fullName" placeholder="Красимир Ватев" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Парола</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <Label htmlFor="regEmail">Имейл адрес *</Label>
+                  <Input id="regEmail" type="email" placeholder="krasimir.vatev@edu.mon.bg" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <p className="text-xs text-muted-foreground">Задължително @edu.mon.bg</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="regPassword">Парола *</Label>
+                  <Input id="regPassword" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Регистрация
+                </Button>
+                <Button type="button" variant="ghost" className="w-full text-sm text-muted-foreground" onClick={() => setMode("login")}>
+                  Вече имате акаунт? Вход
+                </Button>
+              </form>
+            )}
+
+            {mode === "login" && (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="loginEmail">Имейл адрес</Label>
+                  <Input id="loginEmail" type="email" placeholder="krasimir.vatev@edu.mon.bg" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="loginPassword">Парола</Label>
+                  <Input id="loginPassword" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   <KeyRound className="mr-2 h-4 w-4" />
                   Вход
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full text-sm text-muted-foreground"
-                  onClick={() => setForgotMode(true)}
-                >
-                  Забравена парола?
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button type="button" variant="ghost" className="w-full text-sm text-muted-foreground" onClick={() => setMode("register")}>
+                    Нямате акаунт? Регистрация
+                  </Button>
+                  <Button type="button" variant="ghost" className="w-full text-sm text-muted-foreground" onClick={() => setMode("forgot")}>
+                    Забравена парола?
+                  </Button>
+                </div>
               </form>
             )}
           </CardContent>
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Достъпът е само за оторизирани потребители с <strong>@edu.mon.bg</strong> акаунт.
+          Достъп само с <strong>@edu.mon.bg</strong> акаунт.
           <br />
           Пример: <span className="font-mono text-foreground/70">krasimir.vatev@edu.mon.bg</span>
-          <br />
-          Свържете се с администратора за създаване на акаунт.
         </p>
       </div>
     </div>
