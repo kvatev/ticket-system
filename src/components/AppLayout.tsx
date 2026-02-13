@@ -51,8 +51,8 @@ export default function AppLayout() {
 
   const roleLabels: Record<string, string> = {
     admin: "Администратор",
-    staff: "Персонал",
-    user: "Потребител",
+    staff: "Учител ИТ",
+    user: "Учител",
   };
 
   return (
