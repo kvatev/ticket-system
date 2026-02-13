@@ -31,7 +31,8 @@ export default function LoginPage() {
     setLoading(true);
     const { error } = await signIn(email, password);
     if (error) {
-      toast.error("Грешка при вход", { description: "Невалиден имейл или парола." });
+      const desc = error.message.includes("деактивиран") ? error.message : "Невалиден имейл или парола.";
+      toast.error("Грешка при вход", { description: desc });
     }
     setLoading(false);
   };

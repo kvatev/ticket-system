@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Loader2, Pencil, Ban, CheckCircle } from "lucide-react";
+import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search } from "lucide-react";
 
 const roleLabels: Record<string, string> = {
   admin: "Администратор",
@@ -37,6 +37,11 @@ export default function UsersManagementPage() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState("");
   const [savingRole, setSavingRole] = useState(false);
+
+  // Search & filter
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
     fetchData();
@@ -147,6 +152,14 @@ export default function UsersManagementPage() {
     }
   };
 
+  const filteredProfiles = profiles.filter((p) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || p.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
+    const matchesRole = filterRole === "all" || roles[p.user_id] === filterRole;
+    const matchesStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -205,13 +218,42 @@ export default function UsersManagementPage() {
         </Dialog>
       </div>
 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Търсене по име или имейл..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={filterRole} onValueChange={setFilterRole}>
+          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Всички роли</SelectItem>
+            <SelectItem value="admin">Администратор</SelectItem>
+            <SelectItem value="staff">Учител ИТ</SelectItem>
+            <SelectItem value="user">Учител</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Всички статуси</SelectItem>
+            <SelectItem value="active">Активни</SelectItem>
+            <SelectItem value="inactive">Деактивирани</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <div className="divide-y divide-border">
-            {profiles.length === 0 ? (
-              <p className="py-12 text-center text-muted-foreground">Няма потребители.</p>
+            {filteredProfiles.length === 0 ? (
+              <p className="py-12 text-center text-muted-foreground">Няма намерени потребители.</p>
             ) : (
-              profiles.map((p) => (
+              filteredProfiles.map((p) => (
                 <div key={p.id} className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
