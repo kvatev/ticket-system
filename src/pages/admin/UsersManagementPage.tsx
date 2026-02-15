@@ -16,6 +16,8 @@ const roleLabels: Record<string, string> = {
   admin: "Администратор",
   staff: "Учител ИТ",
   user: "Учител",
+  maintenance: "Обслужващ персонал",
+  support: "Поддръжка",
 };
 
 export default function UsersManagementPage() {
@@ -193,6 +195,8 @@ export default function UsersManagementPage() {
                     <SelectContent>
                       <SelectItem value="user">Учител</SelectItem>
                       <SelectItem value="staff">Учител ИТ</SelectItem>
+                      <SelectItem value="maintenance">Обслужващ персонал</SelectItem>
+                      <SelectItem value="support">Поддръжка</SelectItem>
                       <SelectItem value="admin">Администратор</SelectItem>
                     </SelectContent>
                   </Select>
@@ -234,6 +238,8 @@ export default function UsersManagementPage() {
             <SelectItem value="all">Всички роли</SelectItem>
             <SelectItem value="admin">Администратор</SelectItem>
             <SelectItem value="staff">Учител ИТ</SelectItem>
+            <SelectItem value="maintenance">Обслужващ персонал</SelectItem>
+            <SelectItem value="support">Поддръжка</SelectItem>
             <SelectItem value="user">Учител</SelectItem>
           </SelectContent>
         </Select>
@@ -272,6 +278,8 @@ export default function UsersManagementPage() {
                           <SelectContent>
                             <SelectItem value="user">Учител</SelectItem>
                             <SelectItem value="staff">Учител ИТ</SelectItem>
+                            <SelectItem value="maintenance">Обслужващ персонал</SelectItem>
+                            <SelectItem value="support">Поддръжка</SelectItem>
                             <SelectItem value="admin">Администратор</SelectItem>
                           </SelectContent>
                         </Select>

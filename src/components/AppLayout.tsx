@@ -22,16 +22,16 @@ interface NavItem {
   to: string;
   label: string;
   icon: React.ElementType;
-  roles: Array<"admin" | "staff" | "user">;
+  roles: Array<"admin" | "staff" | "user" | "maintenance" | "support">;
 }
 
 const navItems: NavItem[] = [
-  { to: "/", label: "Табло", icon: LayoutDashboard, roles: ["admin", "staff", "user"] },
+  { to: "/", label: "Табло", icon: LayoutDashboard, roles: ["admin", "staff", "user", "maintenance", "support"] },
   { to: "/tickets", label: "Моите заявки", icon: Ticket, roles: ["user"] },
   { to: "/tickets", label: "Заявки", icon: Ticket, roles: ["admin"] },
-  { to: "/tickets/assigned", label: "Възложени на мен", icon: Inbox, roles: ["staff"] },
-  { to: "/tickets/department", label: "Опашка на отдела", icon: FolderOpen, roles: ["staff"] },
-  { to: "/tickets/new", label: "Нова заявка", icon: PlusCircle, roles: ["admin", "staff", "user"] },
+  { to: "/tickets/assigned", label: "Възложени на мен", icon: Inbox, roles: ["staff", "maintenance", "support"] },
+  { to: "/tickets/department", label: "Опашка на отдела", icon: FolderOpen, roles: ["staff", "maintenance", "support"] },
+  { to: "/tickets/new", label: "Нова заявка", icon: PlusCircle, roles: ["admin", "staff", "user", "maintenance", "support"] },
   { to: "/admin/users", label: "Потребители", icon: Users, roles: ["admin"] },
   { to: "/admin/departments", label: "Отдели", icon: Building2, roles: ["admin"] },
   { to: "/admin/reports", label: "Отчети", icon: BarChart3, roles: ["admin"] },
@@ -53,6 +53,8 @@ export default function AppLayout() {
     admin: "Администратор",
     staff: "Учител ИТ",
     user: "Учител",
+    maintenance: "Обслужващ персонал",
+    support: "Поддръжка",
   };
 
   return (

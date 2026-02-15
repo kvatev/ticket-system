@@ -77,7 +77,7 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
   );
 
   const titles: Record<string, string> = {
-    all: role === "user" ? "Моите заявки" : "Всички заявки",
+    all: (role === "user" || role === "maintenance" || role === "support") ? "Моите заявки" : "Всички заявки",
     assigned: "Възложени на мен",
     department: "Опашка на отдела",
   };
