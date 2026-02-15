@@ -183,9 +183,9 @@ export default function LoginPage() {
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Достъп само с <strong>@edu.mon.bg</strong> акаунт.
+          Администратор: <strong>Красимир Ватев</strong>
           <br />
-          Пример: <span className="font-mono text-foreground/70">krasimir.vatev@edu.mon.bg</span>
+          За връзка: <a href="mailto:kvatev@outlook.com" className="font-medium text-primary hover:underline">kvatev@outlook.com</a>
         </p>
       </div>
     </div>
