@@ -1,5 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
   Ticket,
@@ -7,6 +9,7 @@ import {
   Users,
   Building2,
   BarChart3,
+  Shield,
   LogOut,
   Menu,
   X,
@@ -15,7 +18,6 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -34,27 +36,36 @@ const navItems: NavItem[] = [
   { to: "/tickets/new", label: "Нова заявка", icon: PlusCircle, roles: ["admin", "staff", "user", "maintenance", "support"] },
   { to: "/admin/users", label: "Потребители", icon: Users, roles: ["admin"] },
   { to: "/admin/departments", label: "Отдели", icon: Building2, roles: ["admin"] },
+  { to: "/admin/roles", label: "Роли и права", icon: Shield, roles: ["admin"] },
   { to: "/admin/reports", label: "Отчети", icon: BarChart3, roles: ["admin"] },
 ];
 
 export default function AppLayout() {
-  const { profile, role, signOut } = useAuth();
+  const { user, profile, role, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [customRoleName, setCustomRoleName] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchRoleName = async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("custom_role_id, custom_roles(name)")
+        .eq("user_id", user.id)
+        .single();
+      if (data && (data as any).custom_roles?.name) {
+        setCustomRoleName((data as any).custom_roles.name);
+      }
+    };
+    fetchRoleName();
+  }, [user]);
 
   const filteredNav = navItems.filter((item) => role && item.roles.includes(role));
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
-  };
-
-  const roleLabels: Record<string, string> = {
-    admin: "Администратор",
-    staff: "Учител ИТ",
-    user: "Учител",
-    maintenance: "Обслужващ персонал",
-    support: "Поддръжка",
   };
 
   return (
@@ -122,7 +133,7 @@ export default function AppLayout() {
                 {profile?.full_name ?? "..."}
               </p>
               <p className="text-xs text-sidebar-muted">
-                {role ? roleLabels[role] : "..."}
+                {customRoleName || "..."}
               </p>
             </div>
           </div>

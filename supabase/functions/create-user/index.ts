@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { action, user_id, role, email, password, full_name, department_id } = await req.json();
+    const { action, user_id, role, custom_role_id, email, password, full_name, department_id } = await req.json();
 
     // UPDATE ROLE
     if (action === "update_role") {
@@ -58,9 +58,11 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      const updateData: any = { role };
+      if (custom_role_id) updateData.custom_role_id = custom_role_id;
       const { error } = await supabaseAdmin
         .from("user_roles")
-        .update({ role })
+        .update(updateData)
         .eq("user_id", user_id);
 
       if (error) {
@@ -102,10 +104,12 @@ Deno.serve(async (req) => {
       department_id: department_id || null,
     });
 
-    await supabaseAdmin.from("user_roles").insert({
+    const roleInsert: any = {
       user_id: newUser.user!.id,
       role: role || "user",
-    });
+    };
+    if (custom_role_id) roleInsert.custom_role_id = custom_role_id;
+    await supabaseAdmin.from("user_roles").insert(roleInsert);
 
     return new Response(JSON.stringify({ success: true, user_id: newUser.user!.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
