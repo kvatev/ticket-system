@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -58,7 +58,31 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      // Delete related data first
+      // Get profile id for this user
+      const { data: profileData } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user_id)
+        .single();
+      const profileId = profileData?.id;
+
+      // Unassign tickets assigned to this user's profile
+      if (profileId) {
+        await supabaseAdmin.from("tickets").update({ assigned_to: null }).eq("assigned_to", profileId);
+        await supabaseAdmin.from("departments").update({ default_assignee_id: null }).eq("default_assignee_id", profileId);
+      }
+
+      // Delete tickets created by this user (and their related data)
+      const { data: userTickets } = await supabaseAdmin.from("tickets").select("id").eq("created_by", user_id);
+      if (userTickets && userTickets.length > 0) {
+        const ticketIds = userTickets.map((t: any) => t.id);
+        await supabaseAdmin.from("ticket_messages").delete().in("ticket_id", ticketIds);
+        await supabaseAdmin.from("ticket_events").delete().in("ticket_id", ticketIds);
+        await supabaseAdmin.from("ticket_attachments").delete().in("ticket_id", ticketIds);
+        await supabaseAdmin.from("tickets").delete().in("id", ticketIds);
+      }
+
+      // Delete remaining related data (messages/events on other tickets)
       await supabaseAdmin.from("ticket_messages").delete().eq("user_id", user_id);
       await supabaseAdmin.from("ticket_events").delete().eq("user_id", user_id);
       await supabaseAdmin.from("ticket_attachments").delete().eq("user_id", user_id);
