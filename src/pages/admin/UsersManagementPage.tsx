@@ -12,19 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search } from "lucide-react";
 
-const roleLabels: Record<string, string> = {
-  admin: "Администратор",
-  staff: "Учител ИТ",
-  user: "Учител",
-  maintenance: "Обслужващ персонал",
-  support: "Поддръжка",
-};
+interface CustomRole {
+  id: string;
+  name: string;
+  base_role: string;
+}
 
 export default function UsersManagementPage() {
   const { user } = useAuth();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
-  const [roles, setRoles] = useState<Record<string, string>>({});
+  const [userRoles, setUserRoles] = useState<Record<string, { role: string; custom_role_id: string | null }>>({});
+  const [customRoles, setCustomRoles] = useState<CustomRole[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -32,12 +31,12 @@ export default function UsersManagementPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [newRole, setNewRole] = useState("user");
+  const [newCustomRoleId, setNewCustomRoleId] = useState("");
   const [newDeptId, setNewDeptId] = useState("");
 
   // Role edit
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [editRole, setEditRole] = useState("");
+  const [editCustomRoleId, setEditCustomRoleId] = useState("");
   const [savingRole, setSavingRole] = useState(false);
 
   // Search & filter
@@ -50,18 +49,36 @@ export default function UsersManagementPage() {
   }, []);
 
   const fetchData = async () => {
-    const [profilesRes, deptRes, rolesRes] = await Promise.all([
+    const [profilesRes, deptRes, rolesRes, customRolesRes] = await Promise.all([
       supabase.from("profiles").select("*").order("full_name"),
       supabase.from("departments").select("*").order("name"),
-      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("user_roles").select("user_id, role, custom_role_id"),
+      supabase.from("custom_roles").select("id, name, base_role").order("name"),
     ]);
     if (profilesRes.data) setProfiles(profilesRes.data);
     if (deptRes.data) setDepartments(deptRes.data);
-    if (rolesRes.data) {
-      const map: Record<string, string> = {};
-      rolesRes.data.forEach((r: any) => { map[r.user_id] = r.role; });
-      setRoles(map);
+    if (customRolesRes.data) {
+      setCustomRoles(customRolesRes.data as CustomRole[]);
+      // Set default new role to first custom role
+      if (customRolesRes.data.length > 0 && !newCustomRoleId) {
+        const userRole = customRolesRes.data.find((r: any) => r.base_role === "user");
+        setNewCustomRoleId(userRole?.id || customRolesRes.data[0].id);
+      }
     }
+    if (rolesRes.data) {
+      const map: Record<string, { role: string; custom_role_id: string | null }> = {};
+      rolesRes.data.forEach((r: any) => {
+        map[r.user_id] = { role: r.role, custom_role_id: r.custom_role_id };
+      });
+      setUserRoles(map);
+    }
+  };
+
+  const getCustomRoleName = (userId: string) => {
+    const ur = userRoles[userId];
+    if (!ur?.custom_role_id) return ur?.role || "Без роля";
+    const cr = customRoles.find((r) => r.id === ur.custom_role_id);
+    return cr?.name || ur.role || "Без роля";
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -72,6 +89,11 @@ export default function UsersManagementPage() {
     }
     if (!newEmail.endsWith("@edu.mon.bg")) {
       toast.error("Имейлът трябва да завършва с @edu.mon.bg");
+      return;
+    }
+    const selectedRole = customRoles.find((r) => r.id === newCustomRoleId);
+    if (!selectedRole) {
+      toast.error("Моля, изберете роля.");
       return;
     }
     setLoading(true);
@@ -90,7 +112,8 @@ export default function UsersManagementPage() {
             email: newEmail,
             password: newPassword,
             full_name: newName,
-            role: newRole,
+            role: selectedRole.base_role,
+            custom_role_id: newCustomRoleId,
             department_id: newDeptId || null,
           }),
         }
@@ -101,7 +124,7 @@ export default function UsersManagementPage() {
       } else {
         toast.success("Потребителят е създаден успешно!");
         setDialogOpen(false);
-        setNewEmail(""); setNewName(""); setNewPassword(""); setNewRole("user"); setNewDeptId("");
+        setNewEmail(""); setNewName(""); setNewPassword(""); setNewDeptId("");
         fetchData();
       }
     } catch (err: any) {
@@ -111,6 +134,8 @@ export default function UsersManagementPage() {
   };
 
   const handleUpdateRole = async (userId: string) => {
+    const selectedRole = customRoles.find((r) => r.id === editCustomRoleId);
+    if (!selectedRole) return;
     setSavingRole(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -123,7 +148,12 @@ export default function UsersManagementPage() {
             Authorization: `Bearer ${sessionData.session?.access_token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ action: "update_role", user_id: userId, role: editRole }),
+          body: JSON.stringify({
+            action: "update_role",
+            user_id: userId,
+            role: selectedRole.base_role,
+            custom_role_id: editCustomRoleId,
+          }),
         }
       );
       const result = await response.json();
@@ -157,7 +187,7 @@ export default function UsersManagementPage() {
   const filteredProfiles = profiles.filter((p) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch = !q || p.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
-    const matchesRole = filterRole === "all" || roles[p.user_id] === filterRole;
+    const matchesRole = filterRole === "all" || userRoles[p.user_id]?.custom_role_id === filterRole;
     const matchesStatus = filterStatus === "all" || (filterStatus === "active" ? p.is_active : !p.is_active);
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -181,7 +211,7 @@ export default function UsersManagementPage() {
               </div>
               <div className="space-y-2">
                 <Label>Имейл *</Label>
-                <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="krasimir.vatev@edu.mon.bg" required />
+                <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="ivan@edu.mon.bg" required />
               </div>
               <div className="space-y-2">
                 <Label>Парола *</Label>
@@ -190,14 +220,12 @@ export default function UsersManagementPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Роля</Label>
-                  <Select value={newRole} onValueChange={setNewRole}>
+                  <Select value={newCustomRoleId} onValueChange={setNewCustomRoleId}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">Учител</SelectItem>
-                      <SelectItem value="staff">Учител ИТ</SelectItem>
-                      <SelectItem value="maintenance">Обслужващ персонал</SelectItem>
-                      <SelectItem value="support">Поддръжка</SelectItem>
-                      <SelectItem value="admin">Администратор</SelectItem>
+                      {customRoles.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -233,14 +261,12 @@ export default function UsersManagementPage() {
           />
         </div>
         <Select value={filterRole} onValueChange={setFilterRole}>
-          <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Всички роли</SelectItem>
-            <SelectItem value="admin">Администратор</SelectItem>
-            <SelectItem value="staff">Учител ИТ</SelectItem>
-            <SelectItem value="maintenance">Обслужващ персонал</SelectItem>
-            <SelectItem value="support">Поддръжка</SelectItem>
-            <SelectItem value="user">Учител</SelectItem>
+            {customRoles.map((r) => (
+              <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -273,14 +299,12 @@ export default function UsersManagementPage() {
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     {editingUserId === p.user_id ? (
                       <div className="flex flex-wrap items-center gap-2">
-                        <Select value={editRole} onValueChange={setEditRole}>
-                          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                        <Select value={editCustomRoleId} onValueChange={setEditCustomRoleId}>
+                          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="user">Учител</SelectItem>
-                            <SelectItem value="staff">Учител ИТ</SelectItem>
-                            <SelectItem value="maintenance">Обслужващ персонал</SelectItem>
-                            <SelectItem value="support">Поддръжка</SelectItem>
-                            <SelectItem value="admin">Администратор</SelectItem>
+                            {customRoles.map((r) => (
+                              <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <Button size="sm" onClick={() => handleUpdateRole(p.user_id)} disabled={savingRole}>
@@ -290,8 +314,8 @@ export default function UsersManagementPage() {
                       </div>
                     ) : (
                       <>
-                        <Badge variant={roles[p.user_id] === "admin" ? "default" : roles[p.user_id] === "staff" ? "outline" : "secondary"}>
-                          {roleLabels[roles[p.user_id]] ?? "Без роля"}
+                        <Badge variant={userRoles[p.user_id]?.role === "admin" ? "default" : "secondary"}>
+                          {getCustomRoleName(p.user_id)}
                         </Badge>
                         {p.user_id !== user?.id && (
                           <>
@@ -299,7 +323,10 @@ export default function UsersManagementPage() {
                               size="icon"
                               variant="ghost"
                               className="h-8 w-8"
-                              onClick={() => { setEditingUserId(p.user_id); setEditRole(roles[p.user_id] || "user"); }}
+                              onClick={() => {
+                                setEditingUserId(p.user_id);
+                                setEditCustomRoleId(userRoles[p.user_id]?.custom_role_id || "");
+                              }}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
