@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ import {
   Pencil,
   Check,
   X,
+  Trash2,
 } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
@@ -178,63 +180,105 @@ export default function TicketDetailPage() {
     setSaving(false);
   };
 
+  const deleteTicket = async () => {
+    if (!id) return;
+    // Delete related data first, then ticket
+    await Promise.all([
+      supabase.from("ticket_messages").delete().eq("ticket_id", id),
+      supabase.from("ticket_events").delete().eq("ticket_id", id),
+      supabase.from("ticket_attachments").delete().eq("ticket_id", id),
+    ]);
+    const { error } = await supabase.from("tickets").delete().eq("id", id);
+    if (error) {
+      toast.error("Грешка при изтриване на заявката");
+    } else {
+      toast.success("Заявката е изтрита");
+      navigate("/tickets");
+    }
+  };
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          {editing ? (
-            <div className="space-y-2">
-              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="text-xl font-bold" />
-              <Select value={editPriority} onValueChange={setEditPriority}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Ниска</SelectItem>
-                  <SelectItem value="normal">Нормална</SelectItem>
-                  <SelectItem value="high">Висока</SelectItem>
-                  <SelectItem value="urgent">Спешна</SelectItem>
-                </SelectContent>
-              </Select>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1">
+            {editing ? (
+              <div className="space-y-2">
+                <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="text-xl font-bold" />
+                <Select value={editPriority} onValueChange={setEditPriority}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Ниска</SelectItem>
+                    <SelectItem value="normal">Нормална</SelectItem>
+                    <SelectItem value="high">Висока</SelectItem>
+                    <SelectItem value="urgent">Спешна</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-bold text-foreground">{ticket.title}</h1>
+                  {canEdit && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={startEditing}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium status-badge-${ticket.status === "in_progress" ? "in-progress" : ticket.status}`}>
+                    {statusLabels[ticket.status]}
+                  </span>
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium priority-${ticket.priority}`}>
+                    {priorityLabels[ticket.priority]}
+                  </span>
+                  <span>•</span>
+                  <span>{(ticket.departments as any)?.name}</span>
+                  {ticket.class_name && <><span>•</span><span>Клас {ticket.class_name}</span></>}
+                  {ticket.room && <><span>•</span><span>Стая {ticket.room}</span></>}
+                </div>
+              </>
+            )}
+          </div>
+          {editing && (
+            <div className="flex gap-2">
+              <Button size="sm" onClick={saveEdits} disabled={saving}>
+                <Check className="mr-1 h-4 w-4" /> Запази
+              </Button>
+              <Button size="sm" variant="outline" onClick={cancelEditing}>
+                <X className="mr-1 h-4 w-4" /> Откажи
+              </Button>
             </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-foreground">{ticket.title}</h1>
-                {canEdit && !editing && (
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={startEditing}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium status-badge-${ticket.status === "in_progress" ? "in-progress" : ticket.status}`}>
-                  {statusLabels[ticket.status]}
-                </span>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium priority-${ticket.priority}`}>
-                  {priorityLabels[ticket.priority]}
-                </span>
-                <span>•</span>
-                <span>{(ticket.departments as any)?.name}</span>
-                {ticket.class_name && <><span>•</span><span>Клас {ticket.class_name}</span></>}
-                {ticket.room && <><span>•</span><span>Стая {ticket.room}</span></>}
-              </div>
-            </>
           )}
         </div>
-        {editing && (
-          <div className="flex gap-2">
-            <Button size="sm" onClick={saveEdits} disabled={saving}>
-              <Check className="mr-1 h-4 w-4" /> Запази
-            </Button>
-            <Button size="sm" variant="outline" onClick={cancelEditing}>
-              <X className="mr-1 h-4 w-4" /> Откажи
-            </Button>
-          </div>
+        {role === "admin" && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="icon">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Изтриване на заявка</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Сигурни ли сте, че искате да изтриете тази заявка? Това действие е необратимо.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Откажи</AlertDialogCancel>
+                <AlertDialogAction onClick={deleteTicket} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Изтрий
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
 
