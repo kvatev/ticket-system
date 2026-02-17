@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search } from "lucide-react";
+import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search, Trash2 } from "lucide-react";
 
 interface CustomRole {
   id: string;
@@ -181,6 +181,33 @@ export default function UsersManagementPage() {
     } else {
       toast.success(newStatus ? "Потребителят е активиран!" : "Потребителят е деактивиран!");
       fetchData();
+    }
+  };
+
+  const handleDeleteUser = async (profile: any) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ action: "delete_user", user_id: profile.user_id }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error("Грешка при изтриване", { description: result.error });
+      } else {
+        toast.success("Потребителят е изтрит успешно!");
+        fetchData();
+      }
+    } catch (err: any) {
+      toast.error("Грешка", { description: err.message });
     }
   };
 
@@ -355,6 +382,34 @@ export default function UsersManagementPage() {
                                   <AlertDialogCancel>Отказ</AlertDialogCancel>
                                   <AlertDialogAction onClick={() => handleToggleActive(p)}>
                                     {p.is_active ? "Деактивирай" : "Активирай"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Изтриване на потребител</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Сигурни ли сте, че искате да изтриете {p.full_name}? Това действие е необратимо и ще премахне всички данни на потребителя.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Отказ</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => handleDeleteUser(p)}
+                                  >
+                                    Изтрий
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
