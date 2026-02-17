@@ -50,6 +50,33 @@ Deno.serve(async (req) => {
 
     const { action, user_id, role, custom_role_id, email, password, full_name, department_id } = await req.json();
 
+    // DELETE USER
+    if (action === "delete_user") {
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "Missing user_id" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Delete related data first
+      await supabaseAdmin.from("ticket_messages").delete().eq("user_id", user_id);
+      await supabaseAdmin.from("ticket_events").delete().eq("user_id", user_id);
+      await supabaseAdmin.from("ticket_attachments").delete().eq("user_id", user_id);
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", user_id);
+      await supabaseAdmin.from("profiles").delete().eq("user_id", user_id);
+      
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
+      if (deleteError) {
+        return new Response(JSON.stringify({ error: deleteError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // UPDATE ROLE
     if (action === "update_role") {
       if (!user_id || !role) {
