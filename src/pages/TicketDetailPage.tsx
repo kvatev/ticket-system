@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
   Clock,
@@ -20,6 +21,9 @@ import {
   Building2,
   Tag,
   AlertTriangle,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
@@ -42,6 +46,11 @@ export default function TicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editPriority, setEditPriority] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (id) fetchAll();
@@ -130,7 +139,44 @@ export default function TicketDetailPage() {
     return <p className="py-12 text-center text-muted-foreground">Заявката не е намерена.</p>;
   }
 
-  const canManage = role === "admin" || role === "staff";
+  const canManage = role === "admin" || role === "staff" || role === "maintenance" || role === "support";
+  const isOwner = ticket && user && ticket.created_by === user.id;
+  const canEdit = role === "admin" || isOwner;
+
+  const startEditing = () => {
+    setEditTitle(ticket.title);
+    setEditDescription(ticket.description);
+    setEditPriority(ticket.priority);
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+  };
+
+  const saveEdits = async () => {
+    if (!user || !id || !editTitle.trim() || !editDescription.trim()) return;
+    setSaving(true);
+    const { error } = await supabase.from("tickets").update({
+      title: editTitle.trim(),
+      description: editDescription.trim(),
+      priority: editPriority as any,
+    }).eq("id", id);
+    if (error) {
+      toast.error("Грешка при запазване на промените");
+    } else {
+      await supabase.from("ticket_events").insert({
+        ticket_id: id,
+        user_id: user.id,
+        event_type: "edited",
+        description: "Заявката е редактирана",
+      });
+      toast.success("Заявката е обновена");
+      setEditing(false);
+      fetchAll();
+    }
+    setSaving(false);
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 animate-fade-in">
@@ -140,20 +186,56 @@ export default function TicketDetailPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-foreground">{ticket.title}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium status-badge-${ticket.status === "in_progress" ? "in-progress" : ticket.status}`}>
-              {statusLabels[ticket.status]}
-            </span>
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium priority-${ticket.priority}`}>
-              {priorityLabels[ticket.priority]}
-            </span>
-            <span>•</span>
-            <span>{(ticket.departments as any)?.name}</span>
-            {ticket.class_name && <><span>•</span><span>Клас {ticket.class_name}</span></>}
-            {ticket.room && <><span>•</span><span>Стая {ticket.room}</span></>}
-          </div>
+          {editing ? (
+            <div className="space-y-2">
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="text-xl font-bold" />
+              <Select value={editPriority} onValueChange={setEditPriority}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Ниска</SelectItem>
+                  <SelectItem value="normal">Нормална</SelectItem>
+                  <SelectItem value="high">Висока</SelectItem>
+                  <SelectItem value="urgent">Спешна</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-foreground">{ticket.title}</h1>
+                {canEdit && !editing && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={startEditing}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium status-badge-${ticket.status === "in_progress" ? "in-progress" : ticket.status}`}>
+                  {statusLabels[ticket.status]}
+                </span>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium priority-${ticket.priority}`}>
+                  {priorityLabels[ticket.priority]}
+                </span>
+                <span>•</span>
+                <span>{(ticket.departments as any)?.name}</span>
+                {ticket.class_name && <><span>•</span><span>Клас {ticket.class_name}</span></>}
+                {ticket.room && <><span>•</span><span>Стая {ticket.room}</span></>}
+              </div>
+            </>
+          )}
         </div>
+        {editing && (
+          <div className="flex gap-2">
+            <Button size="sm" onClick={saveEdits} disabled={saving}>
+              <Check className="mr-1 h-4 w-4" /> Запази
+            </Button>
+            <Button size="sm" variant="outline" onClick={cancelEditing}>
+              <X className="mr-1 h-4 w-4" /> Откажи
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -165,7 +247,11 @@ export default function TicketDetailPage() {
               <CardTitle className="text-base">Описание</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap text-sm text-foreground">{ticket.description}</p>
+              {editing ? (
+                <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={5} />
+              ) : (
+                <p className="whitespace-pre-wrap text-sm text-foreground">{ticket.description}</p>
+              )}
             </CardContent>
           </Card>
 
