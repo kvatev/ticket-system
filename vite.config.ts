@@ -44,8 +44,8 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       manifest: {
-        name: "Petkanov Ticket System",
-        short_name: "Petkanov",
+        name: "КП Тикет",
+        short_name: "КП Тикет",
         description: "Система за управление на заявки в СУ Константин Петканов",
         theme_color: "#1e3a5f",
         background_color: "#f5f7fa",
