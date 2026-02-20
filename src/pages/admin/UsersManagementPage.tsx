@@ -34,9 +34,10 @@ export default function UsersManagementPage() {
   const [newCustomRoleId, setNewCustomRoleId] = useState("");
   const [newDeptId, setNewDeptId] = useState("");
 
-  // Role edit
+  // Role & dept edit
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editCustomRoleId, setEditCustomRoleId] = useState("");
+  const [editDeptId, setEditDeptId] = useState("");
   const [savingRole, setSavingRole] = useState(false);
 
   // Search & filter
@@ -133,11 +134,12 @@ export default function UsersManagementPage() {
     setLoading(false);
   };
 
-  const handleUpdateRole = async (userId: string) => {
+  const handleUpdateRoleAndDept = async (userId: string, profileId: string) => {
     const selectedRole = customRoles.find((r) => r.id === editCustomRoleId);
     if (!selectedRole) return;
     setSavingRole(true);
     try {
+      // Update role
       const { data: sessionData } = await supabase.auth.getSession();
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
@@ -159,8 +161,19 @@ export default function UsersManagementPage() {
       const result = await response.json();
       if (!response.ok) {
         toast.error("Грешка при промяна на роля", { description: result.error });
+        setSavingRole(false);
+        return;
+      }
+
+      // Update department
+      const { error: deptError } = await supabase
+        .from("profiles")
+        .update({ department_id: editDeptId === "none" ? null : editDeptId || null })
+        .eq("id", profileId);
+      if (deptError) {
+        toast.error("Грешка при промяна на отдел", { description: deptError.message });
       } else {
-        toast.success("Ролята е променена успешно!");
+        toast.success("Данните са променени успешно!");
         setEditingUserId(null);
         fetchData();
       }
@@ -321,6 +334,9 @@ export default function UsersManagementPage() {
                     <div className="min-w-0">
                       <p className="truncate font-medium text-foreground">{p.full_name}</p>
                       <p className="truncate text-xs text-muted-foreground">{p.email}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {departments.find((d) => d.id === p.department_id)?.name || "Без отдел"}
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -334,7 +350,16 @@ export default function UsersManagementPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                        <Button size="sm" onClick={() => handleUpdateRole(p.user_id)} disabled={savingRole}>
+                        <Select value={editDeptId} onValueChange={setEditDeptId}>
+                          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Без отдел" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Без отдел</SelectItem>
+                            {departments.map((d) => (
+                              <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button size="sm" onClick={() => handleUpdateRoleAndDept(p.user_id, p.id)} disabled={savingRole}>
                           {savingRole ? <Loader2 className="h-4 w-4 animate-spin" /> : "Запази"}
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditingUserId(null)}>Отказ</Button>
@@ -353,6 +378,7 @@ export default function UsersManagementPage() {
                               onClick={() => {
                                 setEditingUserId(p.user_id);
                                 setEditCustomRoleId(userRoles[p.user_id]?.custom_role_id || "");
+                                setEditDeptId(p.department_id || "none");
                               }}
                             >
                               <Pencil className="h-3.5 w-3.5" />
