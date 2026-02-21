@@ -15,11 +15,13 @@ export default function CreateTicketPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [departments, setDepartments] = useState<any[]>([]);
+  const [staffProfiles, setStaffProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [departmentId, setDepartmentId] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
   const [priority, setPriority] = useState("normal");
   const [className, setClassName] = useState("");
   const [room, setRoom] = useState("");
@@ -29,6 +31,31 @@ export default function CreateTicketPage() {
       if (data) setDepartments(data);
     });
   }, []);
+
+  // Fetch staff in selected department
+  useEffect(() => {
+    if (!departmentId) {
+      setStaffProfiles([]);
+      setAssignedTo("");
+      return;
+    }
+    supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .eq("department_id", departmentId)
+      .eq("is_active", true)
+      .order("full_name")
+      .then(({ data }) => {
+        setStaffProfiles(data || []);
+        // Auto-assign default assignee if department has one
+        const dept = departments.find((d) => d.id === departmentId);
+        if (dept?.default_assignee_id) {
+          setAssignedTo(dept.default_assignee_id);
+        } else {
+          setAssignedTo("");
+        }
+      });
+  }, [departmentId, departments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +74,7 @@ export default function CreateTicketPage() {
       class_name: className.trim() || null,
       room: room.trim() || null,
       created_by: user.id,
+      assigned_to: assignedTo && assignedTo !== "none" ? assignedTo : null,
     }).select().single();
 
     if (error) {
@@ -131,6 +159,21 @@ export default function CreateTicketPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Назначи на (по избор)</Label>
+              <Select value={assignedTo} onValueChange={setAssignedTo} disabled={!departmentId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={departmentId ? "Изберете служител" : "Първо изберете отдел"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Без назначение</SelectItem>
+                  {staffProfiles.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.full_name} ({p.email})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
