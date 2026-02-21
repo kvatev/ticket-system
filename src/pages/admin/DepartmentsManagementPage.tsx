@@ -60,6 +60,24 @@ export default function DepartmentsManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
+    // Check if there are tickets or profiles linked to this department
+    const [{ count: ticketCount }, { count: profileCount }] = await Promise.all([
+      supabase.from("tickets").select("id", { count: "exact", head: true }).eq("department_id", id),
+      supabase.from("profiles").select("id", { count: "exact", head: true }).eq("department_id", id),
+    ]);
+
+    if ((ticketCount ?? 0) > 0) {
+      toast.error("Не може да се изтрие", {
+        description: `Този отдел има ${ticketCount} заявки. Преместете или изтрийте заявките първо.`,
+      });
+      return;
+    }
+
+    // Unlink profiles from this department before deleting
+    if ((profileCount ?? 0) > 0) {
+      await supabase.from("profiles").update({ department_id: null }).eq("department_id", id);
+    }
+
     const { error } = await supabase.from("departments").delete().eq("id", id);
     if (error) {
       toast.error("Грешка при изтриване", { description: error.message });
