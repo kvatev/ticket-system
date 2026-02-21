@@ -42,6 +42,24 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
     fetchTickets();
   }, [mode, filterStatus, filterDept, user]);
 
+  // Realtime subscription for auto-refresh
+  useEffect(() => {
+    const channel = supabase
+      .channel('tickets-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tickets' },
+        () => {
+          fetchTickets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [mode, filterStatus, filterDept, user]);
+
   const fetchDepartments = async () => {
     const { data } = await supabase.from("departments").select("*").order("name");
     if (data) setDepartments(data);
