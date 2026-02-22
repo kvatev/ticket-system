@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import PushNotificationToggle from "@/components/PushNotificationToggle";
+import { useUnreadTickets } from "@/hooks/useUnreadTickets";
 
 interface NavItem {
   to: string;
@@ -46,6 +47,8 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [customRoleName, setCustomRoleName] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { unreadCount, markAllRead } = useUnreadTickets();
 
   useEffect(() => {
     if (!user) return;
@@ -61,6 +64,13 @@ export default function AppLayout() {
     };
     fetchRoleName();
   }, [user]);
+
+  // Mark read when navigating to ticket pages
+  useEffect(() => {
+    if (location.pathname.startsWith("/tickets") && location.pathname !== "/tickets/new") {
+      markAllRead();
+    }
+  }, [location.pathname, markAllRead]);
 
   const filteredNav = navItems.filter((item) => role && item.roles.includes(role));
 
@@ -102,25 +112,36 @@ export default function AppLayout() {
 
         {/* Nav */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {filteredNav.map((item) => (
-            <NavLink
-              key={item.to + item.label}
-              to={item.to}
-              end={item.to === "/"}
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                )
-              }
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </NavLink>
-          ))}
+          {filteredNav.map((item) => {
+            const isTicketNav = item.to.startsWith("/tickets") && item.to !== "/tickets/new";
+            return (
+              <NavLink
+                key={item.to + item.label}
+                to={item.to}
+                end={item.to === "/"}
+                onClick={() => {
+                  setSidebarOpen(false);
+                  if (isTicketNav) markAllRead();
+                }}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  )
+                }
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                {item.label}
+                {isTicketNav && unreadCount > 0 && (
+                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* User info */}
