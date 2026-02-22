@@ -49,7 +49,7 @@ export function useUnreadTickets() {
     }
   }, [user, profile, fetchUnread]);
 
-  // Realtime listener for new tickets
+  // Realtime listener for new tickets and messages
   useEffect(() => {
     if (!user) return;
 
@@ -60,7 +60,6 @@ export function useUnreadTickets() {
         { event: "INSERT", schema: "public", table: "tickets" },
         (payload) => {
           const newTicket = payload.new as any;
-          // Don't notify about own tickets
           if (newTicket.created_by !== user.id) {
             setUnreadCount((prev) => prev + 1);
             playSound();
@@ -73,7 +72,6 @@ export function useUnreadTickets() {
         (payload) => {
           const updated = payload.new as any;
           const old = payload.old as any;
-          // Sound on assignment change or status change (not own)
           if (updated.created_by !== user.id) {
             if (
               old.assigned_to !== updated.assigned_to ||
@@ -81,6 +79,17 @@ export function useUnreadTickets() {
             ) {
               playSound();
             }
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "ticket_messages" },
+        (payload) => {
+          const msg = payload.new as any;
+          if (msg.user_id !== user.id) {
+            setUnreadCount((prev) => prev + 1);
+            playSound();
           }
         }
       )

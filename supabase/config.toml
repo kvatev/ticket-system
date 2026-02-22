@@ -2,3 +2,6 @@ project_id = "livaxhlywomfyrehokqc"
 
 [functions.notify-ticket-change]
 verify_jwt = false
+
+[functions.notify-ticket-message]
+verify_jwt = false
