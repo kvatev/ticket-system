@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import PushNotificationToggle from "@/components/PushNotificationToggle";
+import NotificationSettings from "@/components/NotificationSettings";
 import { useUnreadTickets } from "@/hooks/useUnreadTickets";
 
 interface NavItem {
@@ -159,12 +159,12 @@ export default function AppLayout() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <PushNotificationToggle />
+          <NotificationSettings />
+          <div className="mt-3">
             <Button
               variant="ghost"
               size="sm"
-              className="flex-1 justify-start text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              className="w-full justify-start text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               onClick={handleSignOut}
             >
               <LogOut className="mr-2 h-4 w-4" />
