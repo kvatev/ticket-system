@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
           },
         };
 
-        const { headers, body: reqBody, endpoint } = await buildPushPayload(
+        const { headers, body: reqBody } = await buildPushPayload(
           {
             data: notificationPayload,
             options: { ttl: 86400 },
@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
           vapidKeys
         );
 
-        const response = await fetch(endpoint, {
+        const response = await fetch(pushSub.endpoint, {
           method: "POST",
           headers,
           body: reqBody,
