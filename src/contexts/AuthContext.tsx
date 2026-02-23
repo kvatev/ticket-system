@@ -11,6 +11,8 @@ interface Profile {
   email: string;
   department_id: string | null;
   is_active: boolean;
+  sound_enabled: boolean;
+  push_enabled: boolean;
 }
 
 interface AuthContextType {
@@ -21,6 +23,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<Pick<Profile, 'sound_enabled' | 'push_enabled'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -103,8 +106,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
   };
 
+  const updateProfile = async (updates: Partial<Pick<Profile, 'sound_enabled' | 'push_enabled'>>) => {
+    if (!profile) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", profile.id);
+    if (!error) {
+      setProfile((prev) => prev ? { ...prev, ...updates } : prev);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, role, loading, signIn, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -20,10 +20,11 @@ export function useUnreadTickets() {
   }, []);
 
   const playSound = useCallback(() => {
+    if (!profile?.sound_enabled) return;
     audioRef.current?.play().catch(() => {
       // Autoplay blocked – ignore silently
     });
-  }, []);
+  }, [profile?.sound_enabled]);
 
   const fetchUnread = useCallback(async () => {
     if (!user || !profile) return;

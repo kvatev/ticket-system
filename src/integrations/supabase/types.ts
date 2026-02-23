@@ -102,6 +102,8 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          push_enabled: boolean
+          sound_enabled: boolean
           updated_at: string
           user_id: string
         }
@@ -112,6 +114,8 @@ export type Database = {
           full_name: string
           id?: string
           is_active?: boolean
+          push_enabled?: boolean
+          sound_enabled?: boolean
           updated_at?: string
           user_id: string
         }
@@ -122,6 +126,8 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          push_enabled?: boolean
+          sound_enabled?: boolean
           updated_at?: string
           user_id?: string
         }
