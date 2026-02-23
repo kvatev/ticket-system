@@ -16,6 +16,7 @@ import {
   School,
   Inbox,
   FolderOpen,
+  UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { to: "/admin/departments", label: "Отдели", icon: Building2, roles: ["admin"] },
   { to: "/admin/roles", label: "Роли и права", icon: Shield, roles: ["admin"] },
   { to: "/admin/reports", label: "Отчети", icon: BarChart3, roles: ["admin"] },
+  { to: "/profile", label: "Профил", icon: UserCog, roles: ["admin", "staff", "user", "maintenance", "support"] },
 ];
 
 export default function AppLayout() {

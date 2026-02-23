@@ -16,6 +16,7 @@ import UsersManagementPage from "@/pages/admin/UsersManagementPage";
 import DepartmentsManagementPage from "@/pages/admin/DepartmentsManagementPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import RolesManagementPage from "@/pages/admin/RolesManagementPage";
+import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/tickets/department" element={<TicketListPage mode="department" />} />
               <Route path="/tickets/new" element={<CreateTicketPage />} />
               <Route path="/tickets/:id" element={<TicketDetailPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin/users" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <UsersManagementPage />
