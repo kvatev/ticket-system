@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
     }
 
     const vapidKeys: VapidKeys = {
+      subject: "mailto:admin@petkanov-ticket.app",
       publicKey: vapidPublicKey,
       privateKey: vapidPrivateKey,
     };
@@ -147,9 +148,8 @@ Deno.serve(async (req) => {
 
         const { headers, body: reqBody, endpoint } = await buildPushPayload(
           { data: notificationPayload, options: { ttl: 86400 } },
-          vapidKeys,
-          "mailto:admin@petkanov-ticket.app",
-          pushSub
+          pushSub,
+          vapidKeys
         );
 
         const response = await fetch(endpoint, {
