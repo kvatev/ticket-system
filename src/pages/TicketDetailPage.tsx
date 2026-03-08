@@ -52,6 +52,10 @@ export default function TicketDetailPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editPriority, setEditPriority] = useState("");
+  const [editDepartmentId, setEditDepartmentId] = useState("");
+  const [editRoom, setEditRoom] = useState("");
+  const [editClassName, setEditClassName] = useState("");
+  const [departments, setDepartments] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
