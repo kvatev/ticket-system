@@ -207,7 +207,7 @@ export default function AppLayout() {
           <button onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5 text-foreground" />
           </button>
-          <h1 className="text-sm font-semibold text-foreground">СУ „К. Петканов"</h1>
+          <h1 className="text-sm font-semibold text-foreground">{settings.school_name}</h1>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
