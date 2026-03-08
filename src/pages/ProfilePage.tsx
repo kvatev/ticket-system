@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,10 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Lock } from "lucide-react";
 
 export default function ProfilePage() {
-  const { profile } = useAuth();
+  const { profile, updateProfile } = useAuth();
   const { toast } = useToast();
 
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
+
+  useEffect(() => {
+    if (profile?.full_name) setFullName(profile.full_name);
+  }, [profile?.full_name]);
   const [nameLoading, setNameLoading] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -24,16 +28,13 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!profile || !fullName.trim()) return;
     setNameLoading(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ full_name: fullName.trim() })
-      .eq("id", profile.id);
-    setNameLoading(false);
-    if (error) {
-      toast({ title: "Грешка", description: "Неуспешна промяна на името.", variant: "destructive" });
-    } else {
+    try {
+      await updateProfile({ full_name: fullName.trim() });
       toast({ title: "Успешно", description: "Името е обновено." });
+    } catch {
+      toast({ title: "Грешка", description: "Неуспешна промяна на името.", variant: "destructive" });
     }
+    setNameLoading(false);
   };
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {

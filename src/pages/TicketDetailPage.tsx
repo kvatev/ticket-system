@@ -52,6 +52,10 @@ export default function TicketDetailPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editPriority, setEditPriority] = useState("");
+  const [editDepartmentId, setEditDepartmentId] = useState("");
+  const [editRoom, setEditRoom] = useState("");
+  const [editClassName, setEditClassName] = useState("");
+  const [departments, setDepartments] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -71,8 +75,8 @@ export default function TicketDetailPage() {
     if (messagesRes.data) setMessages(messagesRes.data);
     if (eventsRes.data) setEvents(eventsRes.data);
 
-    // Fetch staff for assignment
-    if (role === "admin" || role === "staff") {
+    // Fetch staff for assignment (all manager roles + admin)
+    if (role === "admin" || role === "staff" || role === "maintenance" || role === "support") {
       const { data: staff } = await supabase.from("profiles").select("id, full_name");
       if (staff) setStaffMembers(staff);
     }
@@ -145,10 +149,18 @@ export default function TicketDetailPage() {
   const isOwner = ticket && user && ticket.created_by === user.id;
   const canEdit = role === "admin" || isOwner;
 
-  const startEditing = () => {
+  const startEditing = async () => {
     setEditTitle(ticket.title);
     setEditDescription(ticket.description);
     setEditPriority(ticket.priority);
+    setEditDepartmentId(ticket.department_id);
+    setEditRoom(ticket.room || "");
+    setEditClassName(ticket.class_name || "");
+    // Fetch departments for admin editing
+    if (role === "admin") {
+      const { data } = await supabase.from("departments").select("*").order("name");
+      if (data) setDepartments(data);
+    }
     setEditing(true);
   };
 
@@ -159,11 +171,17 @@ export default function TicketDetailPage() {
   const saveEdits = async () => {
     if (!user || !id || !editTitle.trim() || !editDescription.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from("tickets").update({
+    const updateData: any = {
       title: editTitle.trim(),
       description: editDescription.trim(),
       priority: editPriority as any,
-    }).eq("id", id);
+    };
+    if (role === "admin") {
+      updateData.department_id = editDepartmentId;
+      updateData.room = editRoom.trim() || null;
+      updateData.class_name = editClassName.trim() || null;
+    }
+    const { error } = await supabase.from("tickets").update(updateData).eq("id", id);
     if (error) {
       toast.error("Грешка при запазване на промените");
     } else {
@@ -209,17 +227,35 @@ export default function TicketDetailPage() {
             {editing ? (
               <div className="space-y-2">
                 <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="text-xl font-bold" />
-                <Select value={editPriority} onValueChange={setEditPriority}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Ниска</SelectItem>
-                    <SelectItem value="normal">Нормална</SelectItem>
-                    <SelectItem value="high">Висока</SelectItem>
-                    <SelectItem value="urgent">Спешна</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-2">
+                  <Select value={editPriority} onValueChange={setEditPriority}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Ниска</SelectItem>
+                      <SelectItem value="normal">Нормална</SelectItem>
+                      <SelectItem value="high">Висока</SelectItem>
+                      <SelectItem value="urgent">Спешна</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {role === "admin" && (
+                    <>
+                      <Select value={editDepartmentId} onValueChange={setEditDepartmentId}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Отдел" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments.map((d) => (
+                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input value={editClassName} onChange={(e) => setEditClassName(e.target.value)} placeholder="Клас" className="w-24" />
+                      <Input value={editRoom} onChange={(e) => setEditRoom(e.target.value)} placeholder="Стая" className="w-32" />
+                    </>
+                  )}
+                </div>
               </div>
             ) : (
               <>
