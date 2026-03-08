@@ -92,6 +92,10 @@ export function useUnreadTickets() {
             toast({
               title: "📩 Нова заявка",
               description: newTicket.title || "Получихте нова заявка",
+              action: React.createElement(ToastAction, {
+                altText: "Виж заявката",
+                onClick: () => navigate(`/tickets/${newTicket.id}`),
+              }, "Виж"),
             });
           }
         }
