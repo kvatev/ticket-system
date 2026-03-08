@@ -71,8 +71,8 @@ export default function TicketDetailPage() {
     if (messagesRes.data) setMessages(messagesRes.data);
     if (eventsRes.data) setEvents(eventsRes.data);
 
-    // Fetch staff for assignment
-    if (role === "admin" || role === "staff") {
+    // Fetch staff for assignment (all manager roles + admin)
+    if (role === "admin" || role === "staff" || role === "maintenance" || role === "support") {
       const { data: staff } = await supabase.from("profiles").select("id, full_name");
       if (staff) setStaffMembers(staff);
     }
