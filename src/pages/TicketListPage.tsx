@@ -41,7 +41,7 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
   useEffect(() => {
     fetchDepartments();
     fetchTickets();
-  }, [mode, filterStatus, filterDept, user]);
+  }, [mode, filterStatus, filterDept, filterPriority, user]);
 
   // Realtime subscription for auto-refresh
   useEffect(() => {
