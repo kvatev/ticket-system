@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Megaphone, Plus, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { logAuditAction } from "@/lib/auditLog";
 
 const typeLabels: Record<string, string> = {
   info: "Информация",
@@ -65,6 +66,7 @@ export default function AnnouncementsPage() {
     } else {
       toast.success("Съобщението е създадено!");
       setDialogOpen(false);
+      logAuditAction("Създаване на съобщение", "announcement", undefined, { title: title.trim(), type });
       setTitle("");
       setContent("");
       setType("info");
@@ -102,6 +104,7 @@ export default function AnnouncementsPage() {
       .eq("id", id);
     if (!error) {
       toast.success(isActive ? "Съобщението е скрито." : "Съобщението е активирано.");
+      logAuditAction(isActive ? "Скриване на съобщение" : "Активиране на съобщение", "announcement", id);
       fetchAnnouncements();
     }
   };
@@ -110,6 +113,7 @@ export default function AnnouncementsPage() {
     const { error } = await supabase.from("announcements").delete().eq("id", id);
     if (!error) {
       toast.success("Съобщението е изтрито.");
+      logAuditAction("Изтриване на съобщение", "announcement", id);
       fetchAnnouncements();
     }
   };

@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ShieldPlus, Pencil, Trash2, Loader2, Shield } from "lucide-react";
+import { logAuditAction } from "@/lib/auditLog";
 
 interface CustomRole {
   id: string;
@@ -151,6 +152,7 @@ export default function RolesManagementPage() {
       }
 
       toast.success(editingRole ? "Ролята е обновена!" : "Ролята е създадена!");
+      logAuditAction(editingRole ? "Редактиране на роля" : "Създаване на роля", "role", roleId, { name: formName });
       setDialogOpen(false);
       fetchData();
     } catch (err: any) {
@@ -165,6 +167,7 @@ export default function RolesManagementPage() {
       toast.error("Грешка при изтриване", { description: error.message });
     } else {
       toast.success("Ролята е изтрита!");
+      logAuditAction("Изтриване на роля", "role", role.id, { name: role.name });
       fetchData();
     }
   };

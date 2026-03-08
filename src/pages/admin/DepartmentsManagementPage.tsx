@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Building2, PlusCircle, Loader2, Pencil, Trash2, Check, X } from "lucide-react";
+import { logAuditAction } from "@/lib/auditLog";
 
 export default function DepartmentsManagementPage() {
   const [departments, setDepartments] = useState<any[]>([]);
@@ -38,6 +39,7 @@ export default function DepartmentsManagementPage() {
       toast.error("Грешка", { description: error.message });
     } else {
       toast.success("Отделът е създаден.");
+      logAuditAction("Създаване на отдел", "department", undefined, { name: newName.trim() });
       setDialogOpen(false);
       setNewName("");
       fetchDepartments();
@@ -53,6 +55,7 @@ export default function DepartmentsManagementPage() {
       toast.error("Грешка", { description: error.message });
     } else {
       toast.success("Отделът е обновен.");
+      logAuditAction("Редактиране на отдел", "department", id, { name: editName.trim() });
       setEditingId(null);
       fetchDepartments();
     }
@@ -83,6 +86,7 @@ export default function DepartmentsManagementPage() {
       toast.error("Грешка при изтриване", { description: error.message });
     } else {
       toast.success("Отделът е изтрит.");
+      logAuditAction("Изтриване на отдел", "department", id);
       fetchDepartments();
     }
   };

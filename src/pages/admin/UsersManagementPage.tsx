@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search, Trash2, KeyRound } from "lucide-react";
+import { logAuditAction } from "@/lib/auditLog";
 
 interface CustomRole {
   id: string;
@@ -130,6 +131,7 @@ export default function UsersManagementPage() {
         toast.error("Грешка при създаване", { description: result.error });
       } else {
         toast.success("Потребителят е създаден успешно!");
+        logAuditAction("Създаване на потребител", "user", undefined, { email: newEmail, name: newName });
         setDialogOpen(false);
         setNewEmail(""); setNewName(""); setNewPassword(""); setNewDeptId("");
         fetchData();
@@ -180,6 +182,8 @@ export default function UsersManagementPage() {
         toast.error("Грешка при промяна на отдел", { description: deptError.message });
       } else {
         toast.success("Данните са променени успешно!");
+        const roleName = customRoles.find(r => r.id === editCustomRoleId)?.name;
+        logAuditAction("Промяна на роля/отдел", "user", userId, { role: roleName, department_id: editDeptId });
         setEditingUserId(null);
         fetchData();
       }
@@ -199,6 +203,7 @@ export default function UsersManagementPage() {
       toast.error("Грешка при промяна на статус", { description: error.message });
     } else {
       toast.success(newStatus ? "Потребителят е активиран!" : "Потребителят е деактивиран!");
+      logAuditAction(newStatus ? "Активиране на потребител" : "Деактивиране на потребител", "user", profile.user_id, { name: profile.full_name });
       fetchData();
     }
   };
@@ -223,6 +228,7 @@ export default function UsersManagementPage() {
         toast.error("Грешка при изтриване", { description: result.error });
       } else {
         toast.success("Потребителят е изтрит успешно!");
+        logAuditAction("Изтриване на потребител", "user", profile.user_id, { name: profile.full_name, email: profile.email });
         fetchData();
       }
     } catch (err: any) {
@@ -260,6 +266,7 @@ export default function UsersManagementPage() {
         toast.error("Грешка при смяна на парола", { description: result.error });
       } else {
         toast.success("Паролата е променена успешно!");
+        logAuditAction("Ресет на парола", "user", resetPasswordUserId!, { name: resetPasswordName });
         setResetPasswordUserId(null);
         setResetNewPassword("");
       }
