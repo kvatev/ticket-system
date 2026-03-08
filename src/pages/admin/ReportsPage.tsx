@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { Download } from "lucide-react";
 
 export default function ReportsPage() {
   const [byStatus, setByStatus] = useState<any[]>([]);
@@ -21,9 +23,12 @@ export default function ReportsPage() {
     fetchReports();
   }, []);
 
+  const [allTickets, setAllTickets] = useState<any[]>([]);
+
   const fetchReports = async () => {
-    const { data: tickets } = await supabase.from("tickets").select("status, department_id, departments(name)");
+    const { data: tickets } = await supabase.from("tickets").select("status, department_id, title, priority, created_at, departments(name)");
     if (!tickets) return;
+    setAllTickets(tickets);
 
     // By status
     const statusMap: Record<string, number> = {};
@@ -44,9 +49,35 @@ export default function ReportsPage() {
     setByDept(Object.entries(deptMap).map(([name, count]) => ({ name, count })));
   };
 
+  const exportCSV = () => {
+    if (allTickets.length === 0) return;
+    const headers = ["Заглавие", "Статус", "Приоритет", "Отдел", "Дата"];
+    const rows = allTickets.map((t) => [
+      `"${(t.title || "").replace(/"/g, '""')}"`,
+      statusLabels[t.status] || t.status,
+      t.priority,
+      (t.departments as any)?.name || "",
+      t.created_at?.slice(0, 10) || "",
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tickets-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <h1 className="text-2xl font-bold text-foreground">Отчети</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Отчети</h1>
+        <Button variant="outline" onClick={exportCSV} disabled={allTickets.length === 0}>
+          <Download className="mr-2 h-4 w-4" />
+          Експорт CSV
+        </Button>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

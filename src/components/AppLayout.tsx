@@ -17,12 +17,18 @@ import {
   Inbox,
   FolderOpen,
   UserCog,
+  Settings,
+  Megaphone,
+  ScrollText,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NotificationSettings from "@/components/NotificationSettings";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useUnreadTickets } from "@/hooks/useUnreadTickets";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 
 interface NavItem {
   to: string;
@@ -38,15 +44,20 @@ const navItems: NavItem[] = [
   { to: "/tickets/assigned", label: "Възложени на мен", icon: Inbox, roles: ["staff", "maintenance", "support"] },
   { to: "/tickets/department", label: "Опашка на отдела", icon: FolderOpen, roles: ["staff", "maintenance", "support"] },
   { to: "/tickets/new", label: "Нова заявка", icon: PlusCircle, roles: ["admin", "staff", "user", "maintenance", "support"] },
+  { to: "/announcements", label: "Съобщения", icon: Bell, roles: ["admin", "staff", "user", "maintenance", "support"] },
   { to: "/admin/users", label: "Потребители", icon: Users, roles: ["admin"] },
   { to: "/admin/departments", label: "Отдели", icon: Building2, roles: ["admin"] },
   { to: "/admin/roles", label: "Роли и права", icon: Shield, roles: ["admin"] },
+  { to: "/admin/announcements", label: "Управление съобщения", icon: Megaphone, roles: ["admin"] },
   { to: "/admin/reports", label: "Отчети", icon: BarChart3, roles: ["admin"] },
+  { to: "/admin/audit-log", label: "Журнал", icon: ScrollText, roles: ["admin"] },
+  { to: "/admin/settings", label: "Настройки", icon: Settings, roles: ["admin"] },
   { to: "/profile", label: "Профил", icon: UserCog, roles: ["admin", "staff", "user", "maintenance", "support"] },
 ];
 
 export default function AppLayout() {
   const { user, profile, role, signOut } = useAuth();
+  const { settings } = useSystemSettings();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [customRoleName, setCustomRoleName] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -112,8 +123,8 @@ export default function AppLayout() {
             <School className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-sidebar-foreground">СУ „К. Петканов"</p>
-            <p className="text-xs text-sidebar-muted">Система за заявки</p>
+            <p className="truncate text-sm font-semibold text-sidebar-foreground">{settings.school_name}</p>
+            <p className="text-xs text-sidebar-muted">{settings.school_subtitle}</p>
           </div>
           <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5 text-sidebar-muted" />
@@ -196,10 +207,11 @@ export default function AppLayout() {
           <button onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5 text-foreground" />
           </button>
-          <h1 className="text-sm font-semibold text-foreground">СУ „К. Петканов"</h1>
+          <h1 className="text-sm font-semibold text-foreground">{settings.school_name}</h1>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <AnnouncementBanner />
           <Outlet />
         </main>
       </div>

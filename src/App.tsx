@@ -17,6 +17,10 @@ import UsersManagementPage from "@/pages/admin/UsersManagementPage";
 import DepartmentsManagementPage from "@/pages/admin/DepartmentsManagementPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import RolesManagementPage from "@/pages/admin/RolesManagementPage";
+import SettingsPage from "@/pages/admin/SettingsPage";
+import AnnouncementsPage from "@/pages/admin/AnnouncementsPage";
+import AuditLogPage from "@/pages/admin/AuditLogPage";
+import AnnouncementsListPage from "@/pages/AnnouncementsListPage";
 import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
 
@@ -63,6 +67,7 @@ const App = () => (
               <Route path="/tickets/new" element={<CreateTicketPage />} />
               <Route path="/tickets/:id" element={<TicketDetailPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/announcements" element={<AnnouncementsListPage />} />
               <Route path="/admin/users" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <UsersManagementPage />
@@ -81,6 +86,21 @@ const App = () => (
               <Route path="/admin/roles" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <RolesManagementPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/settings" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <SettingsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/announcements" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AnnouncementsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/audit-log" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AuditLogPage />
                 </ProtectedRoute>
               } />
             </Route>
