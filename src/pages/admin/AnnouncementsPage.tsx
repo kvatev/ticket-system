@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Megaphone, Plus, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { logAuditAction } from "@/lib/auditLog";
 
 const typeLabels: Record<string, string> = {
   info: "Информация",
