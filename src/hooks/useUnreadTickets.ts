@@ -8,6 +8,7 @@ export function useUnreadTickets() {
   const { user, role, profile } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const userInteractedRef = useRef(false);
   const lastSeenRef = useRef<string>(
     localStorage.getItem(STORAGE_KEY) || new Date().toISOString()
   );
@@ -17,29 +18,48 @@ export function useUnreadTickets() {
     const audio = new Audio("/notification.mp3");
     audio.volume = 0.5;
     audioRef.current = audio;
+
+    // Track user interaction to unlock audio playback
+    const unlockAudio = () => {
+      userInteractedRef.current = true;
+      // Pre-load audio after first interaction
+      if (audioRef.current) {
+        audioRef.current.load();
+      }
+    };
+
+    document.addEventListener("click", unlockAudio, { once: true });
+    document.addEventListener("keydown", unlockAudio, { once: true });
+    document.addEventListener("touchstart", unlockAudio, { once: true });
+
+    return () => {
+      document.removeEventListener("click", unlockAudio);
+      document.removeEventListener("keydown", unlockAudio);
+      document.removeEventListener("touchstart", unlockAudio);
+    };
   }, []);
 
   const playSound = useCallback(() => {
     if (!profile?.sound_enabled) return;
-    audioRef.current?.play().catch(() => {
-      // Autoplay blocked – ignore silently
+    if (!audioRef.current) return;
+
+    // Clone the audio to allow overlapping plays
+    const sound = audioRef.current.cloneNode() as HTMLAudioElement;
+    sound.volume = 0.5;
+    sound.play().catch(() => {
+      // Autoplay blocked – ignored
     });
   }, [profile?.sound_enabled]);
 
   const fetchUnread = useCallback(async () => {
     if (!user || !profile) return;
 
-    let query = supabase
+    const { count } = await supabase
       .from("tickets")
       .select("id", { count: "exact", head: true })
       .gt("created_at", lastSeenRef.current)
       .neq("created_by", user.id);
 
-    // Staff/maintenance/support see their dept or assigned tickets
-    // Admin sees all; regular users see nothing extra
-    // RLS will filter anyway, so just count what's visible
-
-    const { count } = await query;
     setUnreadCount(count ?? 0);
   }, [user, profile]);
 
