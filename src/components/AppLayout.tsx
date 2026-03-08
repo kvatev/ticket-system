@@ -17,12 +17,18 @@ import {
   Inbox,
   FolderOpen,
   UserCog,
+  Settings,
+  Megaphone,
+  ScrollText,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NotificationSettings from "@/components/NotificationSettings";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useUnreadTickets } from "@/hooks/useUnreadTickets";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 
 interface NavItem {
   to: string;
@@ -38,10 +44,14 @@ const navItems: NavItem[] = [
   { to: "/tickets/assigned", label: "Възложени на мен", icon: Inbox, roles: ["staff", "maintenance", "support"] },
   { to: "/tickets/department", label: "Опашка на отдела", icon: FolderOpen, roles: ["staff", "maintenance", "support"] },
   { to: "/tickets/new", label: "Нова заявка", icon: PlusCircle, roles: ["admin", "staff", "user", "maintenance", "support"] },
+  { to: "/announcements", label: "Съобщения", icon: Bell, roles: ["admin", "staff", "user", "maintenance", "support"] },
   { to: "/admin/users", label: "Потребители", icon: Users, roles: ["admin"] },
   { to: "/admin/departments", label: "Отдели", icon: Building2, roles: ["admin"] },
   { to: "/admin/roles", label: "Роли и права", icon: Shield, roles: ["admin"] },
+  { to: "/admin/announcements", label: "Управление съобщения", icon: Megaphone, roles: ["admin"] },
   { to: "/admin/reports", label: "Отчети", icon: BarChart3, roles: ["admin"] },
+  { to: "/admin/audit-log", label: "Журнал", icon: ScrollText, roles: ["admin"] },
+  { to: "/admin/settings", label: "Настройки", icon: Settings, roles: ["admin"] },
   { to: "/profile", label: "Профил", icon: UserCog, roles: ["admin", "staff", "user", "maintenance", "support"] },
 ];
 
