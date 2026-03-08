@@ -34,6 +34,7 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
   const [departments, setDepartments] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDept, setFilterDept] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
