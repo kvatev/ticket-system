@@ -156,8 +156,12 @@ export default function AppLayout() {
         {/* User info */}
         <div className="border-t border-sidebar-border p-4">
           <div className="mb-3 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground">
-              {profile?.full_name?.charAt(0) ?? "?"}
+            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                profile?.full_name?.charAt(0) ?? "?"
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-sidebar-foreground">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,23 +6,68 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Lock } from "lucide-react";
+import { User, Lock, Camera, Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { profile, updateProfile } = useAuth();
+  const { profile, user, updateProfile } = useAuth();
   const { toast } = useToast();
 
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
-
-  useEffect(() => {
-    if (profile?.full_name) setFullName(profile.full_name);
-  }, [profile?.full_name]);
   const [nameLoading, setNameLoading] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passLoading, setPassLoading] = useState(false);
+
+  useEffect(() => {
+    if (profile?.full_name) setFullName(profile.full_name);
+  }, [profile?.full_name]);
+
+  const getAvatarUrl = () => {
+    if (!profile?.avatar_url) return null;
+    const { data } = supabase.storage.from("avatars").getPublicUrl(profile.avatar_url);
+    return data.publicUrl;
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Грешка", description: "Моля, изберете изображение.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Грешка", description: "Файлът трябва да е до 2MB.", variant: "destructive" });
+      return;
+    }
+
+    setAvatarLoading(true);
+    const ext = file.name.split(".").pop();
+    const filePath = `${user.id}/avatar.${ext}`;
+
+    // Delete old avatar if exists
+    if (profile?.avatar_url) {
+      await supabase.storage.from("avatars").remove([profile.avatar_url]);
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      toast({ title: "Грешка", description: "Неуспешно качване на снимката.", variant: "destructive" });
+    } else {
+      await updateProfile({ avatar_url: filePath });
+      toast({ title: "Успешно", description: "Профилната снимка е обновена." });
+    }
+    setAvatarLoading(false);
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleNameUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +93,6 @@ export default function ProfilePage() {
       return;
     }
     setPassLoading(true);
-    // Verify current password by re-signing in
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: profile?.email ?? "",
       password: currentPassword,
@@ -70,10 +114,60 @@ export default function ProfilePage() {
     }
   };
 
+  const avatarUrl = getAvatarUrl();
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold text-foreground">Профил</h1>
 
+      {/* Avatar */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Camera className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-lg">Профилна снимка</CardTitle>
+          </div>
+          <CardDescription>Качете снимка до 2MB (JPG, PNG, WebP).</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-6">
+            <div className="relative group">
+              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-2xl font-bold text-primary ring-2 ring-border">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Аватар" className="h-full w-full object-cover" />
+                ) : (
+                  profile?.full_name?.charAt(0) ?? "?"
+                )}
+              </div>
+              {avatarLoading && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/70">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={avatarLoading}
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                {avatarUrl ? "Смени снимката" : "Качи снимка"}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Personal data */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -105,6 +199,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      {/* Password */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -117,35 +212,15 @@ export default function ProfilePage() {
           <form onSubmit={handlePasswordUpdate} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="currentPassword">Текуща парола</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
+              <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="newPassword">Нова парола</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={6}
-                required
-              />
+              <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={6} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Потвърдете новата парола</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                minLength={6}
-                required
-              />
+              <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={6} required />
             </div>
             <Button type="submit" disabled={passLoading}>
               {passLoading ? "Промяна..." : "Промени парола"}
