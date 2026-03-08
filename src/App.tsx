@@ -67,6 +67,7 @@ const App = () => (
               <Route path="/tickets/new" element={<CreateTicketPage />} />
               <Route path="/tickets/:id" element={<TicketDetailPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/announcements" element={<AnnouncementsListPage />} />
               <Route path="/admin/users" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <UsersManagementPage />
