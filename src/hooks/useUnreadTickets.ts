@@ -142,6 +142,10 @@ export function useUnreadTickets() {
             toast({
               title: "💬 Ново съобщение",
               description: msg.content?.substring(0, 80) || "Получихте ново съобщение по заявка",
+              action: React.createElement(ToastAction, {
+                altText: "Виж заявката",
+                onClick: () => navigate(`/tickets/${msg.ticket_id}`),
+              } as any, "Виж") as any,
             });
           }
         }
