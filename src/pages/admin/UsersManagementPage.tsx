@@ -228,6 +228,7 @@ export default function UsersManagementPage() {
         toast.error("Грешка при изтриване", { description: result.error });
       } else {
         toast.success("Потребителят е изтрит успешно!");
+        logAuditAction("Изтриване на потребител", "user", profile.user_id, { name: profile.full_name, email: profile.email });
         fetchData();
       }
     } catch (err: any) {
