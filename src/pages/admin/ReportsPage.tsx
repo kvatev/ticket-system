@@ -23,9 +23,12 @@ export default function ReportsPage() {
     fetchReports();
   }, []);
 
+  const [allTickets, setAllTickets] = useState<any[]>([]);
+
   const fetchReports = async () => {
-    const { data: tickets } = await supabase.from("tickets").select("status, department_id, departments(name)");
+    const { data: tickets } = await supabase.from("tickets").select("status, department_id, title, priority, created_at, departments(name)");
     if (!tickets) return;
+    setAllTickets(tickets);
 
     // By status
     const statusMap: Record<string, number> = {};
