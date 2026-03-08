@@ -113,6 +113,7 @@ export default function AnnouncementsPage() {
     const { error } = await supabase.from("announcements").delete().eq("id", id);
     if (!error) {
       toast.success("Съобщението е изтрито.");
+      logAuditAction("Изтриване на съобщение", "announcement", id);
       fetchAnnouncements();
     }
   };
