@@ -44,7 +44,7 @@ export default function AnnouncementsPage() {
   const fetchAnnouncements = async () => {
     const { data } = await supabase
       .from("announcements")
-      .select("*, profiles!announcements_created_by_fkey(full_name)")
+      .select("*, profiles!announcements_created_by_profiles_fkey(full_name)")
       .order("created_at", { ascending: false });
     if (data) setAnnouncements(data);
   };
