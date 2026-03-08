@@ -52,6 +52,13 @@ export default function AppLayout() {
   const location = useLocation();
   const { unreadCount, markAllRead } = useUnreadTickets();
 
+  const getAvatarUrl = () => {
+    if (!profile?.avatar_url) return null;
+    const { data } = supabase.storage.from("avatars").getPublicUrl(profile.avatar_url);
+    return data.publicUrl;
+  };
+  const avatarUrl = getAvatarUrl();
+
   useEffect(() => {
     if (!user) return;
     const fetchRoleName = async () => {
