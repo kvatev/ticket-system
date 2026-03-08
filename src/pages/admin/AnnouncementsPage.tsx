@@ -69,6 +69,29 @@ export default function AnnouncementsPage() {
       setContent("");
       setType("info");
       fetchAnnouncements();
+
+      // Send push notification to all users with push enabled
+      try {
+        const { data: pushUsers } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("push_enabled", true)
+          .neq("user_id", user.id);
+
+        if (pushUsers?.length) {
+          await supabase.functions.invoke("send-push-notification", {
+            body: {
+              user_ids: pushUsers.map((u: any) => u.user_id),
+              title: `📢 ${title.trim()}`,
+              body: content.trim().slice(0, 200),
+              url: "/announcements",
+              tag: "announcement",
+            },
+          });
+        }
+      } catch (err) {
+        console.error("Push notification error:", err);
+      }
     }
   };
 
