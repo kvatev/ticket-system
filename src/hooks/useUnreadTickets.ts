@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const STORAGE_KEY = "last-seen-ticket-time";
