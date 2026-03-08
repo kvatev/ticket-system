@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search, Trash2 } from "lucide-react";
+import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search, Trash2, KeyRound } from "lucide-react";
 
 interface CustomRole {
   id: string;
