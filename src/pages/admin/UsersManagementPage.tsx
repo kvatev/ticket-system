@@ -203,6 +203,7 @@ export default function UsersManagementPage() {
       toast.error("Грешка при промяна на статус", { description: error.message });
     } else {
       toast.success(newStatus ? "Потребителят е активиран!" : "Потребителят е деактивиран!");
+      logAuditAction(newStatus ? "Активиране на потребител" : "Деактивиране на потребител", "user", profile.user_id, { name: profile.full_name });
       fetchData();
     }
   };
