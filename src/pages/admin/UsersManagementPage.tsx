@@ -230,6 +230,45 @@ export default function UsersManagementPage() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resetPasswordUserId || !resetNewPassword) return;
+    if (resetNewPassword.length < 6) {
+      toast.error("Паролата трябва да е поне 6 символа.");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            action: "reset_password",
+            user_id: resetPasswordUserId,
+            password: resetNewPassword,
+          }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error("Грешка при смяна на парола", { description: result.error });
+      } else {
+        toast.success("Паролата е променена успешно!");
+        setResetPasswordUserId(null);
+        setResetNewPassword("");
+      }
+    } catch (err: any) {
+      toast.error("Грешка", { description: err.message });
+    }
+    setResetLoading(false);
+  };
+
   const filteredProfiles = profiles.filter((p) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch = !q || p.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
