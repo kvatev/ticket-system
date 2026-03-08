@@ -171,11 +171,17 @@ export default function TicketDetailPage() {
   const saveEdits = async () => {
     if (!user || !id || !editTitle.trim() || !editDescription.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from("tickets").update({
+    const updateData: any = {
       title: editTitle.trim(),
       description: editDescription.trim(),
       priority: editPriority as any,
-    }).eq("id", id);
+    };
+    if (role === "admin") {
+      updateData.department_id = editDepartmentId;
+      updateData.room = editRoom.trim() || null;
+      updateData.class_name = editClassName.trim() || null;
+    }
+    const { error } = await supabase.from("tickets").update(updateData).eq("id", id);
     if (error) {
       toast.error("Грешка при запазване на промените");
     } else {
