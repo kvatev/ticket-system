@@ -155,7 +155,7 @@ export function useUnreadTickets() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, playSound]);
+  }, [user, playSound, navigate]);
 
   const markAllRead = useCallback(() => {
     const now = new Date().toISOString();

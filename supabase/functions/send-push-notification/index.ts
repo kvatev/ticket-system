@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
     });
 
     const vapidKeys: VapidKeys = {
+      subject: "mailto:admin@petkanov-ticket.app",
       publicKey: vapidPublicKey,
       privateKey: vapidPrivateKey,
     };
@@ -84,20 +85,20 @@ Deno.serve(async (req) => {
           keys: { p256dh: sub.p256dh, auth: sub.auth },
         };
 
-        const { headers, body: reqBody, endpoint } = await buildPushPayload(
+        const { headers, body: reqBody } = await buildPushPayload(
           { data: notificationPayload, options: { ttl: 86400 } },
-          vapidKeys,
-          "mailto:admin@petkanov-ticket.app",
-          pushSub
+          pushSub,
+          vapidKeys
         );
 
-        const response = await fetch(endpoint, { method: "POST", headers, body: reqBody });
+        const response = await fetch(pushSub.endpoint, { method: "POST", headers, body: reqBody });
 
         if (response.ok) {
           sent++;
         } else {
           failed++;
           const status = response.status;
+          console.error("Push failed:", status, await response.text());
           if (status === 410 || status === 404) {
             await supabase.from("push_subscriptions").delete().eq("id", sub.id);
           }
