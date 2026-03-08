@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ShieldPlus, Pencil, Trash2, Loader2, Shield } from "lucide-react";
+import { logAuditAction } from "@/lib/auditLog";
 
 interface CustomRole {
   id: string;
