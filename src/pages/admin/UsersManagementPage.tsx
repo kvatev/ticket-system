@@ -513,6 +513,31 @@ export default function UsersManagementPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={!!resetPasswordUserId} onOpenChange={(open) => { if (!open) setResetPasswordUserId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Смяна на парола за {resetPasswordName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Нова парола</Label>
+              <Input
+                type="password"
+                value={resetNewPassword}
+                onChange={(e) => setResetNewPassword(e.target.value)}
+                placeholder="Минимум 6 символа"
+                minLength={6}
+              />
+            </div>
+            <Button className="w-full" onClick={handleResetPassword} disabled={resetLoading || resetNewPassword.length < 6}>
+              {resetLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Смени паролата
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
