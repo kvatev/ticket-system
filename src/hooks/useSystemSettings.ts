@@ -8,7 +8,7 @@ interface SystemSettings {
 }
 
 const defaults: SystemSettings = {
-  school_name: "СУ „К. Петканов"",
+  school_name: 'СУ \u201EК. Петканов\u201C',
   school_subtitle: "Система за заявки",
 };
 
