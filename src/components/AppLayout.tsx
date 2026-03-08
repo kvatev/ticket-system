@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NotificationSettings from "@/components/NotificationSettings";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useUnreadTickets } from "@/hooks/useUnreadTickets";
 
 interface NavItem {
