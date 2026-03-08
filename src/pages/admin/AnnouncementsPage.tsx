@@ -66,6 +66,7 @@ export default function AnnouncementsPage() {
     } else {
       toast.success("Съобщението е създадено!");
       setDialogOpen(false);
+      logAuditAction("Създаване на съобщение", "announcement", undefined, { title: title.trim(), type });
       setTitle("");
       setContent("");
       setType("info");
