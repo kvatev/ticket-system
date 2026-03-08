@@ -174,6 +174,7 @@ export default function AppLayout() {
             </div>
           </div>
           <NotificationSettings />
+          <ThemeToggle />
           <div className="mt-3">
             <Button
               variant="ghost"
