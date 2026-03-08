@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const STORAGE_KEY = "last-seen-ticket-time";
 
 export function useUnreadTickets() {
   const { user, role, profile } = useAuth();
+  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const userInteractedRef = useRef(false);
@@ -88,6 +92,10 @@ export function useUnreadTickets() {
             toast({
               title: "📩 Нова заявка",
               description: newTicket.title || "Получихте нова заявка",
+              action: React.createElement(ToastAction, {
+                altText: "Виж заявката",
+                onClick: () => navigate(`/tickets/${newTicket.id}`),
+              } as any, "Виж") as any,
             });
           }
         }
@@ -104,12 +112,20 @@ export function useUnreadTickets() {
               toast({
                 title: "🔄 Промяна на статус",
                 description: `Заявка "${updated.title}" → ${updated.status}`,
+                action: React.createElement(ToastAction, {
+                  altText: "Виж заявката",
+                  onClick: () => navigate(`/tickets/${updated.id}`),
+                } as any, "Виж") as any,
               });
             } else if (old.assigned_to !== updated.assigned_to) {
               playSound();
               toast({
                 title: "👤 Промяна на изпълнител",
                 description: `Заявка "${updated.title}" е преназначена`,
+                action: React.createElement(ToastAction, {
+                  altText: "Виж заявката",
+                  onClick: () => navigate(`/tickets/${updated.id}`),
+                } as any, "Виж") as any,
               });
             }
           }
@@ -126,6 +142,10 @@ export function useUnreadTickets() {
             toast({
               title: "💬 Ново съобщение",
               description: msg.content?.substring(0, 80) || "Получихте ново съобщение по заявка",
+              action: React.createElement(ToastAction, {
+                altText: "Виж заявката",
+                onClick: () => navigate(`/tickets/${msg.ticket_id}`),
+              } as any, "Виж") as any,
             });
           }
         }
