@@ -182,6 +182,8 @@ export default function UsersManagementPage() {
         toast.error("Грешка при промяна на отдел", { description: deptError.message });
       } else {
         toast.success("Данните са променени успешно!");
+        const roleName = customRoles.find(r => r.id === editCustomRoleId)?.name;
+        logAuditAction("Промяна на роля/отдел", "user", userId, { role: roleName, department_id: editDeptId });
         setEditingUserId(null);
         fetchData();
       }
