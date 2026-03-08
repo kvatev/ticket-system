@@ -158,6 +158,18 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
             ))}
           </SelectContent>
         </Select>
+        <Select value={filterPriority} onValueChange={setFilterPriority}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Приоритет" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Всички приоритети</SelectItem>
+            <SelectItem value="low">Ниска</SelectItem>
+            <SelectItem value="normal">Нормална</SelectItem>
+            <SelectItem value="high">Висока</SelectItem>
+            <SelectItem value="urgent">Спешна</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Ticket list */}
