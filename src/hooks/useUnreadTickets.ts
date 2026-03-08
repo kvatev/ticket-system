@@ -10,6 +10,7 @@ const STORAGE_KEY = "last-seen-ticket-time";
 
 export function useUnreadTickets() {
   const { user, role, profile } = useAuth();
+  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const userInteractedRef = useRef(false);
