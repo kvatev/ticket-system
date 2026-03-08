@@ -9,10 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Lock } from "lucide-react";
 
 export default function ProfilePage() {
-  const { profile } = useAuth();
+  const { profile, updateProfile } = useAuth();
   const { toast } = useToast();
 
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
+
+  useEffect(() => {
+    if (profile?.full_name) setFullName(profile.full_name);
+  }, [profile?.full_name]);
   const [nameLoading, setNameLoading] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
