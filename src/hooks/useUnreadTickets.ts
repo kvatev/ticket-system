@@ -99,11 +99,18 @@ export function useUnreadTickets() {
           const updated = payload.new as any;
           const old = payload.old as any;
           if (updated.created_by !== user.id) {
-            if (
-              old.assigned_to !== updated.assigned_to ||
-              old.status !== updated.status
-            ) {
+            if (old.status !== updated.status) {
               playSound();
+              toast({
+                title: "🔄 Промяна на статус",
+                description: `Заявка "${updated.title}" → ${updated.status}`,
+              });
+            } else if (old.assigned_to !== updated.assigned_to) {
+              playSound();
+              toast({
+                title: "👤 Промяна на изпълнител",
+                description: `Заявка "${updated.title}" е преназначена`,
+              });
             }
           }
         }
