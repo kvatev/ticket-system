@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
 const STORAGE_KEY = "last-seen-ticket-time";
@@ -84,6 +85,10 @@ export function useUnreadTickets() {
           if (newTicket.created_by !== user.id) {
             setUnreadCount((prev) => prev + 1);
             playSound();
+            toast({
+              title: "📩 Нова заявка",
+              description: newTicket.title || "Получихте нова заявка",
+            });
           }
         }
       )
@@ -94,11 +99,18 @@ export function useUnreadTickets() {
           const updated = payload.new as any;
           const old = payload.old as any;
           if (updated.created_by !== user.id) {
-            if (
-              old.assigned_to !== updated.assigned_to ||
-              old.status !== updated.status
-            ) {
+            if (old.status !== updated.status) {
               playSound();
+              toast({
+                title: "🔄 Промяна на статус",
+                description: `Заявка "${updated.title}" → ${updated.status}`,
+              });
+            } else if (old.assigned_to !== updated.assigned_to) {
+              playSound();
+              toast({
+                title: "👤 Промяна на изпълнител",
+                description: `Заявка "${updated.title}" е преназначена`,
+              });
             }
           }
         }
@@ -111,6 +123,10 @@ export function useUnreadTickets() {
           if (msg.user_id !== user.id) {
             setUnreadCount((prev) => prev + 1);
             playSound();
+            toast({
+              title: "💬 Ново съобщение",
+              description: msg.content?.substring(0, 80) || "Получихте ново съобщение по заявка",
+            });
           }
         }
       )
