@@ -90,9 +90,16 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
     setLoading(false);
   };
 
-  const filtered = tickets.filter((t) =>
-    search ? t.title.toLowerCase().includes(search.toLowerCase()) : true
-  );
+  const filtered = tickets.filter((t) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      t.title?.toLowerCase().includes(q) ||
+      t.description?.toLowerCase().includes(q) ||
+      t.class_name?.toLowerCase().includes(q) ||
+      t.room?.toLowerCase().includes(q)
+    );
+  });
 
   const titles: Record<string, string> = {
     all: (role === "user" || role === "maintenance" || role === "support") ? "Моите заявки" : "Всички заявки",
