@@ -104,6 +104,7 @@ export default function AnnouncementsPage() {
       .eq("id", id);
     if (!error) {
       toast.success(isActive ? "Съобщението е скрито." : "Съобщението е активирано.");
+      logAuditAction(isActive ? "Скриване на съобщение" : "Активиране на съобщение", "announcement", id);
       fetchAnnouncements();
     }
   };
