@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Building2, PlusCircle, Loader2, Pencil, Trash2, Check, X } from "lucide-react";
+import { logAuditAction } from "@/lib/auditLog";
 
 export default function DepartmentsManagementPage() {
   const [departments, setDepartments] = useState<any[]>([]);
