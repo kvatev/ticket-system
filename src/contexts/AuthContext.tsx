@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
   };
 
-  const updateProfile = async (updates: Partial<Pick<Profile, 'sound_enabled' | 'push_enabled'>>) => {
+  const updateProfile = async (updates: Partial<Pick<Profile, 'sound_enabled' | 'push_enabled' | 'full_name'>>) => {
     if (!profile) return;
     const { error } = await supabase
       .from("profiles")
