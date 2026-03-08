@@ -152,6 +152,7 @@ export default function RolesManagementPage() {
       }
 
       toast.success(editingRole ? "Ролята е обновена!" : "Ролята е създадена!");
+      logAuditAction(editingRole ? "Редактиране на роля" : "Създаване на роля", "role", roleId, { name: formName });
       setDialogOpen(false);
       fetchData();
     } catch (err: any) {
