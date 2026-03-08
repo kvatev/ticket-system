@@ -123,6 +123,10 @@ export function useUnreadTickets() {
           if (msg.user_id !== user.id) {
             setUnreadCount((prev) => prev + 1);
             playSound();
+            toast({
+              title: "💬 Ново съобщение",
+              description: msg.content?.substring(0, 80) || "Получихте ново съобщение по заявка",
+            });
           }
         }
       )
