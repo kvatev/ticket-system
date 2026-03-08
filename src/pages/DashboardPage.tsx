@@ -18,10 +18,6 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({ total: 0, new: 0, inProgress: 0, resolved: 0 });
   const [recentTickets, setRecentTickets] = useState<any[]>([]);
 
-  useEffect(() => {
-    fetchData();
-  }, [role]);
-
   const fetchData = async () => {
     const { data: tickets } = await supabase
       .from("tickets")
@@ -31,27 +27,40 @@ export default function DashboardPage() {
 
     if (tickets) {
       setRecentTickets(tickets);
-      setStats({
-        total: tickets.length,
-        new: tickets.filter((t) => t.status === "new").length,
-        inProgress: tickets.filter((t) => t.status === "in_progress").length,
-        resolved: tickets.filter((t) => t.status === "resolved").length,
-      });
     }
 
     // Get full counts
-    const { count: totalCount } = await supabase.from("tickets").select("*", { count: "exact", head: true });
-    const { count: newCount } = await supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "new");
-    const { count: ipCount } = await supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "in_progress");
-    const { count: resCount } = await supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "resolved");
+    const [totalRes, newRes, ipRes, resRes] = await Promise.all([
+      supabase.from("tickets").select("*", { count: "exact", head: true }),
+      supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "new"),
+      supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "in_progress"),
+      supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "resolved"),
+    ]);
 
     setStats({
-      total: totalCount ?? 0,
-      new: newCount ?? 0,
-      inProgress: ipCount ?? 0,
-      resolved: resCount ?? 0,
+      total: totalRes.count ?? 0,
+      new: newRes.count ?? 0,
+      inProgress: ipRes.count ?? 0,
+      resolved: resRes.count ?? 0,
     });
   };
+
+  useEffect(() => {
+    fetchData();
+  }, [role]);
+
+  // Real-time updates for dashboard
+  useEffect(() => {
+    const channel = supabase
+      .channel("dashboard-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, () => fetchData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "ticket_messages" }, () => fetchData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role]);
 
   const statCards = [
     { label: "Общо заявки", value: stats.total, icon: Ticket, color: "text-primary" },
@@ -66,13 +75,6 @@ export default function DashboardPage() {
     waiting_for_user: "Чака отговор",
     resolved: "Решена",
     closed: "Затворена",
-  };
-
-  const priorityLabels: Record<string, string> = {
-    low: "Ниска",
-    normal: "Нормална",
-    high: "Висока",
-    urgent: "Спешна",
   };
 
   return (
