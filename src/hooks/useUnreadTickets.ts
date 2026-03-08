@@ -112,12 +112,20 @@ export function useUnreadTickets() {
               toast({
                 title: "🔄 Промяна на статус",
                 description: `Заявка "${updated.title}" → ${updated.status}`,
+                action: React.createElement(ToastAction, {
+                  altText: "Виж заявката",
+                  onClick: () => navigate(`/tickets/${updated.id}`),
+                } as any, "Виж") as any,
               });
             } else if (old.assigned_to !== updated.assigned_to) {
               playSound();
               toast({
                 title: "👤 Промяна на изпълнител",
                 description: `Заявка "${updated.title}" е преназначена`,
+                action: React.createElement(ToastAction, {
+                  altText: "Виж заявката",
+                  onClick: () => navigate(`/tickets/${updated.id}`),
+                } as any, "Виж") as any,
               });
             }
           }
