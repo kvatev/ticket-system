@@ -30,6 +30,7 @@ export default function SettingsPage() {
       toast.error("Грешка при запазване на настройките.");
     } else {
       toast.success("Настройките са запазени!");
+      logAuditAction("Промяна на системни настройки", "settings", undefined, { school_name: schoolName.trim(), school_subtitle: subtitle.trim() });
     }
   };
 

@@ -167,6 +167,7 @@ export default function RolesManagementPage() {
       toast.error("Грешка при изтриване", { description: error.message });
     } else {
       toast.success("Ролята е изтрита!");
+      logAuditAction("Изтриване на роля", "role", role.id, { name: role.name });
       fetchData();
     }
   };

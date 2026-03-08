@@ -86,6 +86,7 @@ export default function DepartmentsManagementPage() {
       toast.error("Грешка при изтриване", { description: error.message });
     } else {
       toast.success("Отделът е изтрит.");
+      logAuditAction("Изтриване на отдел", "department", id);
       fetchDepartments();
     }
   };
