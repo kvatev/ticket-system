@@ -1,0 +1,1 @@
+CREATE POLICY "Admin can delete audit log" ON public.audit_log FOR DELETE USING (has_role(auth.uid(), 'admin'::app_role));

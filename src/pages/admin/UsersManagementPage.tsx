@@ -266,6 +266,7 @@ export default function UsersManagementPage() {
         toast.error("Грешка при смяна на парола", { description: result.error });
       } else {
         toast.success("Паролата е променена успешно!");
+        logAuditAction("Ресет на парола", "user", resetPasswordUserId!, { name: resetPasswordName });
         setResetPasswordUserId(null);
         setResetNewPassword("");
       }
