@@ -425,8 +425,22 @@ export default function UsersManagementPage() {
                                 setEditCustomRoleId(userRoles[p.user_id]?.custom_role_id || "");
                                 setEditDeptId(p.department_id || "none");
                               }}
+                              title="Редактирай"
                             >
                               <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => {
+                                setResetPasswordUserId(p.user_id);
+                                setResetPasswordName(p.full_name);
+                                setResetNewPassword("");
+                              }}
+                              title="Смяна на парола"
+                            >
+                              <KeyRound className="h-3.5 w-3.5" />
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
