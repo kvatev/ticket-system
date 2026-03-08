@@ -101,6 +101,32 @@ Deno.serve(async (req) => {
       });
     }
 
+    // RESET PASSWORD
+    if (action === "reset_password") {
+      if (!user_id || !password) {
+        return new Response(JSON.stringify({ error: "Missing user_id or password" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (password.length < 6) {
+        return new Response(JSON.stringify({ error: "Паролата трябва да е поне 6 символа." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { error: resetError } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password });
+      if (resetError) {
+        return new Response(JSON.stringify({ error: resetError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // UPDATE ROLE
     if (action === "update_role") {
       if (!user_id || !role) {

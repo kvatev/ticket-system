@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search, Trash2 } from "lucide-react";
+import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search, Trash2, KeyRound } from "lucide-react";
 
 interface CustomRole {
   id: string;
@@ -39,6 +39,12 @@ export default function UsersManagementPage() {
   const [editCustomRoleId, setEditCustomRoleId] = useState("");
   const [editDeptId, setEditDeptId] = useState("");
   const [savingRole, setSavingRole] = useState(false);
+
+  // Password reset
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
+  const [resetPasswordName, setResetPasswordName] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Search & filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -224,6 +230,45 @@ export default function UsersManagementPage() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resetPasswordUserId || !resetNewPassword) return;
+    if (resetNewPassword.length < 6) {
+      toast.error("Паролата трябва да е поне 6 символа.");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            action: "reset_password",
+            user_id: resetPasswordUserId,
+            password: resetNewPassword,
+          }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error("Грешка при смяна на парола", { description: result.error });
+      } else {
+        toast.success("Паролата е променена успешно!");
+        setResetPasswordUserId(null);
+        setResetNewPassword("");
+      }
+    } catch (err: any) {
+      toast.error("Грешка", { description: err.message });
+    }
+    setResetLoading(false);
+  };
+
   const filteredProfiles = profiles.filter((p) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch = !q || p.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
@@ -380,8 +425,22 @@ export default function UsersManagementPage() {
                                 setEditCustomRoleId(userRoles[p.user_id]?.custom_role_id || "");
                                 setEditDeptId(p.department_id || "none");
                               }}
+                              title="Редактирай"
                             >
                               <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => {
+                                setResetPasswordUserId(p.user_id);
+                                setResetPasswordName(p.full_name);
+                                setResetNewPassword("");
+                              }}
+                              title="Смяна на парола"
+                            >
+                              <KeyRound className="h-3.5 w-3.5" />
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -454,6 +513,31 @@ export default function UsersManagementPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={!!resetPasswordUserId} onOpenChange={(open) => { if (!open) setResetPasswordUserId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Смяна на парола за {resetPasswordName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Нова парола</Label>
+              <Input
+                type="password"
+                value={resetNewPassword}
+                onChange={(e) => setResetNewPassword(e.target.value)}
+                placeholder="Минимум 6 символа"
+                minLength={6}
+              />
+            </div>
+            <Button className="w-full" onClick={handleResetPassword} disabled={resetLoading || resetNewPassword.length < 6}>
+              {resetLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Смени паролата
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
