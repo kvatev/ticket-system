@@ -17,6 +17,10 @@ import UsersManagementPage from "@/pages/admin/UsersManagementPage";
 import DepartmentsManagementPage from "@/pages/admin/DepartmentsManagementPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import RolesManagementPage from "@/pages/admin/RolesManagementPage";
+import SettingsPage from "@/pages/admin/SettingsPage";
+import AnnouncementsPage from "@/pages/admin/AnnouncementsPage";
+import AuditLogPage from "@/pages/admin/AuditLogPage";
+import AnnouncementsListPage from "@/pages/AnnouncementsListPage";
 import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
 
