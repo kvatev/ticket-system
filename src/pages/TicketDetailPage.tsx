@@ -149,10 +149,18 @@ export default function TicketDetailPage() {
   const isOwner = ticket && user && ticket.created_by === user.id;
   const canEdit = role === "admin" || isOwner;
 
-  const startEditing = () => {
+  const startEditing = async () => {
     setEditTitle(ticket.title);
     setEditDescription(ticket.description);
     setEditPriority(ticket.priority);
+    setEditDepartmentId(ticket.department_id);
+    setEditRoom(ticket.room || "");
+    setEditClassName(ticket.class_name || "");
+    // Fetch departments for admin editing
+    if (role === "admin") {
+      const { data } = await supabase.from("departments").select("*").order("name");
+      if (data) setDepartments(data);
+    }
     setEditing(true);
   };
 
