@@ -88,6 +88,21 @@ const App = () => (
                   <RolesManagementPage />
                 </ProtectedRoute>
               } />
+              <Route path="/admin/settings" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <SettingsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/announcements" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AnnouncementsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/audit-log" element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AuditLogPage />
+                </ProtectedRoute>
+              } />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
