@@ -49,9 +49,35 @@ export default function ReportsPage() {
     setByDept(Object.entries(deptMap).map(([name, count]) => ({ name, count })));
   };
 
+  const exportCSV = () => {
+    if (allTickets.length === 0) return;
+    const headers = ["Заглавие", "Статус", "Приоритет", "Отдел", "Дата"];
+    const rows = allTickets.map((t) => [
+      `"${(t.title || "").replace(/"/g, '""')}"`,
+      statusLabels[t.status] || t.status,
+      t.priority,
+      (t.departments as any)?.name || "",
+      t.created_at?.slice(0, 10) || "",
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tickets-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <h1 className="text-2xl font-bold text-foreground">Отчети</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Отчети</h1>
+        <Button variant="outline" onClick={exportCSV} disabled={allTickets.length === 0}>
+          <Download className="mr-2 h-4 w-4" />
+          Експорт CSV
+        </Button>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
