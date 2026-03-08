@@ -123,8 +123,8 @@ export default function AppLayout() {
             <School className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-sidebar-foreground">СУ „К. Петканов"</p>
-            <p className="text-xs text-sidebar-muted">Система за заявки</p>
+            <p className="truncate text-sm font-semibold text-sidebar-foreground">{settings.school_name}</p>
+            <p className="text-xs text-sidebar-muted">{settings.school_subtitle}</p>
           </div>
           <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5 text-sidebar-muted" />
