@@ -57,6 +57,7 @@ const navItems: NavItem[] = [
 
 export default function AppLayout() {
   const { user, profile, role, signOut } = useAuth();
+  const { settings } = useSystemSettings();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [customRoleName, setCustomRoleName] = useState<string | null>(null);
   const navigate = useNavigate();
