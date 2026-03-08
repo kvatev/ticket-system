@@ -85,6 +85,10 @@ export function useUnreadTickets() {
           if (newTicket.created_by !== user.id) {
             setUnreadCount((prev) => prev + 1);
             playSound();
+            toast({
+              title: "📩 Нова заявка",
+              description: newTicket.title || "Получихте нова заявка",
+            });
           }
         }
       )
