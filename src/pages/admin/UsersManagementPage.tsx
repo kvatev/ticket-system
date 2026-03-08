@@ -40,6 +40,12 @@ export default function UsersManagementPage() {
   const [editDeptId, setEditDeptId] = useState("");
   const [savingRole, setSavingRole] = useState(false);
 
+  // Password reset
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
+  const [resetPasswordName, setResetPasswordName] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
   // Search & filter
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
