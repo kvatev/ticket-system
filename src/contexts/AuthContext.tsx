@@ -23,7 +23,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<Pick<Profile, 'sound_enabled' | 'push_enabled'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Pick<Profile, 'sound_enabled' | 'push_enabled' | 'full_name'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

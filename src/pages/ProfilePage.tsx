@@ -28,16 +28,13 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!profile || !fullName.trim()) return;
     setNameLoading(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ full_name: fullName.trim() })
-      .eq("id", profile.id);
-    setNameLoading(false);
-    if (error) {
-      toast({ title: "Грешка", description: "Неуспешна промяна на името.", variant: "destructive" });
-    } else {
+    try {
+      await updateProfile({ full_name: fullName.trim() });
       toast({ title: "Успешно", description: "Името е обновено." });
+    } catch {
+      toast({ title: "Грешка", description: "Неуспешна промяна на името.", variant: "destructive" });
     }
+    setNameLoading(false);
   };
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {

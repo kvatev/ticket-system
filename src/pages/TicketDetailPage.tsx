@@ -227,17 +227,35 @@ export default function TicketDetailPage() {
             {editing ? (
               <div className="space-y-2">
                 <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="text-xl font-bold" />
-                <Select value={editPriority} onValueChange={setEditPriority}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Ниска</SelectItem>
-                    <SelectItem value="normal">Нормална</SelectItem>
-                    <SelectItem value="high">Висока</SelectItem>
-                    <SelectItem value="urgent">Спешна</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-2">
+                  <Select value={editPriority} onValueChange={setEditPriority}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Ниска</SelectItem>
+                      <SelectItem value="normal">Нормална</SelectItem>
+                      <SelectItem value="high">Висока</SelectItem>
+                      <SelectItem value="urgent">Спешна</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {role === "admin" && (
+                    <>
+                      <Select value={editDepartmentId} onValueChange={setEditDepartmentId}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Отдел" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments.map((d) => (
+                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input value={editClassName} onChange={(e) => setEditClassName(e.target.value)} placeholder="Клас" className="w-24" />
+                      <Input value={editRoom} onChange={(e) => setEditRoom(e.target.value)} placeholder="Стая" className="w-32" />
+                    </>
+                  )}
+                </div>
               </div>
             ) : (
               <>
