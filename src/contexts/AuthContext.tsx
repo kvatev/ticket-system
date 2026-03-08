@@ -13,6 +13,7 @@ interface Profile {
   is_active: boolean;
   sound_enabled: boolean;
   push_enabled: boolean;
+  avatar_url: string | null;
 }
 
 interface AuthContextType {
