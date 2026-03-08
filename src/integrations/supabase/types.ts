@@ -45,7 +45,15 @@ export type Database = {
           title?: string
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "announcements_created_by_profiles_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       audit_log: {
         Row: {
