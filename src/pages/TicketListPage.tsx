@@ -85,6 +85,9 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
     if (filterDept !== "all") {
       query = query.eq("department_id", filterDept);
     }
+    if (filterPriority !== "all") {
+      query = query.eq("priority", filterPriority as any);
+    }
 
     const { data } = await query;
     setTickets(data ?? []);
