@@ -39,6 +39,7 @@ export default function DepartmentsManagementPage() {
       toast.error("Грешка", { description: error.message });
     } else {
       toast.success("Отделът е създаден.");
+      logAuditAction("Създаване на отдел", "department", undefined, { name: newName.trim() });
       setDialogOpen(false);
       setNewName("");
       fetchDepartments();
