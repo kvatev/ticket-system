@@ -59,7 +59,7 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [mode, filterStatus, filterDept, user]);
+  }, [mode, filterStatus, filterDept, filterPriority, user]);
 
   const fetchDepartments = async () => {
     const { data } = await supabase.from("departments").select("*").order("name");
