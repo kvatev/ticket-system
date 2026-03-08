@@ -34,13 +34,14 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
   const [departments, setDepartments] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDept, setFilterDept] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDepartments();
     fetchTickets();
-  }, [mode, filterStatus, filterDept, user]);
+  }, [mode, filterStatus, filterDept, filterPriority, user]);
 
   // Realtime subscription for auto-refresh
   useEffect(() => {
@@ -58,7 +59,7 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [mode, filterStatus, filterDept, user]);
+  }, [mode, filterStatus, filterDept, filterPriority, user]);
 
   const fetchDepartments = async () => {
     const { data } = await supabase.from("departments").select("*").order("name");
@@ -84,15 +85,25 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
     if (filterDept !== "all") {
       query = query.eq("department_id", filterDept);
     }
+    if (filterPriority !== "all") {
+      query = query.eq("priority", filterPriority as any);
+    }
 
     const { data } = await query;
     setTickets(data ?? []);
     setLoading(false);
   };
 
-  const filtered = tickets.filter((t) =>
-    search ? t.title.toLowerCase().includes(search.toLowerCase()) : true
-  );
+  const filtered = tickets.filter((t) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      t.title?.toLowerCase().includes(q) ||
+      t.description?.toLowerCase().includes(q) ||
+      t.class_name?.toLowerCase().includes(q) ||
+      t.room?.toLowerCase().includes(q)
+    );
+  });
 
   const titles: Record<string, string> = {
     all: (role === "user" || role === "maintenance" || role === "support") ? "Моите заявки" : "Всички заявки",
@@ -117,7 +128,7 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Търсене..."
+            placeholder="Търсене по заглавие, описание, клас, стая..."
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -145,6 +156,18 @@ export default function TicketListPage({ mode = "all" }: TicketListProps) {
             {departments.map((d) => (
               <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterPriority} onValueChange={setFilterPriority}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Приоритет" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Всички приоритети</SelectItem>
+            <SelectItem value="low">Ниска</SelectItem>
+            <SelectItem value="normal">Нормална</SelectItem>
+            <SelectItem value="high">Висока</SelectItem>
+            <SelectItem value="urgent">Спешна</SelectItem>
           </SelectContent>
         </Select>
       </div>
