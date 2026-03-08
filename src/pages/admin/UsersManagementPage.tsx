@@ -131,6 +131,7 @@ export default function UsersManagementPage() {
         toast.error("Грешка при създаване", { description: result.error });
       } else {
         toast.success("Потребителят е създаден успешно!");
+        logAuditAction("Създаване на потребител", "user", undefined, { email: newEmail, name: newName });
         setDialogOpen(false);
         setNewEmail(""); setNewName(""); setNewPassword(""); setNewDeptId("");
         fetchData();
