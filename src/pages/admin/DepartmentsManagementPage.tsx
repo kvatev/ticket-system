@@ -55,6 +55,7 @@ export default function DepartmentsManagementPage() {
       toast.error("Грешка", { description: error.message });
     } else {
       toast.success("Отделът е обновен.");
+      logAuditAction("Редактиране на отдел", "department", id, { name: editName.trim() });
       setEditingId(null);
       fetchDepartments();
     }
