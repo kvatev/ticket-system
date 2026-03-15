@@ -185,9 +185,11 @@ export default function AppLayout() {
               </p>
             </div>
           </div>
-          <NotificationSettings />
-          <ThemeToggle />
-          <div className="mt-3">
+          <div className="flex items-center gap-1">
+            <NotificationHistory />
+            <NotificationSettings />
+            <ThemeToggle />
+          </div>
             <Button
               variant="ghost"
               size="sm"
