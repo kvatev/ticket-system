@@ -190,6 +190,7 @@ export default function AppLayout() {
             <NotificationSettings />
             <ThemeToggle />
           </div>
+          <div className="mt-3">
             <Button
               variant="ghost"
               size="sm"
