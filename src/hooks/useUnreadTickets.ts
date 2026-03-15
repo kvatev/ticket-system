@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { pushNotification } from "@/hooks/useNotificationStore";
 
 const STORAGE_KEY = "last-seen-ticket-time";
 
