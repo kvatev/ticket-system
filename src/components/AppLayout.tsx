@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NotificationSettings from "@/components/NotificationSettings";
+import NotificationHistory from "@/components/NotificationHistory";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useUnreadTickets } from "@/hooks/useUnreadTickets";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
@@ -184,8 +185,11 @@ export default function AppLayout() {
               </p>
             </div>
           </div>
-          <NotificationSettings />
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <NotificationHistory />
+            <NotificationSettings />
+            <ThemeToggle />
+          </div>
           <div className="mt-3">
             <Button
               variant="ghost"
