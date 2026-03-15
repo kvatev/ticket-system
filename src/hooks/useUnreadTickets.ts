@@ -90,9 +90,12 @@ export function useUnreadTickets() {
           if (newTicket.created_by !== user.id) {
             setUnreadCount((prev) => prev + 1);
             playSound();
+            const title = "📩 Нова заявка";
+            const description = newTicket.title || "Получихте нова заявка";
+            pushNotification({ title, description, ticketId: newTicket.id });
             toast({
-              title: "📩 Нова заявка",
-              description: newTicket.title || "Получихте нова заявка",
+              title,
+              description,
               action: React.createElement(ToastAction, {
                 altText: "Виж заявката",
                 onClick: () => navigate(`/tickets/${newTicket.id}`),
