@@ -113,9 +113,12 @@ export function useUnreadTickets() {
           if (updated.created_by !== user.id) {
             if (old.status !== updated.status) {
               playSound();
+              const title = "🔄 Промяна на статус";
+              const description = `Заявка "${updated.title}" → ${updated.status}`;
+              pushNotification({ title, description, ticketId: updated.id });
               toast({
-                title: "🔄 Промяна на статус",
-                description: `Заявка "${updated.title}" → ${updated.status}`,
+                title,
+                description,
                 action: React.createElement(ToastAction, {
                   altText: "Виж заявката",
                   onClick: () => navigate(`/tickets/${updated.id}`),
@@ -123,9 +126,12 @@ export function useUnreadTickets() {
               });
             } else if (old.assigned_to !== updated.assigned_to) {
               playSound();
+              const title = "👤 Промяна на изпълнител";
+              const description = `Заявка "${updated.title}" е преназначена`;
+              pushNotification({ title, description, ticketId: updated.id });
               toast({
-                title: "👤 Промяна на изпълнител",
-                description: `Заявка "${updated.title}" е преназначена`,
+                title,
+                description,
                 action: React.createElement(ToastAction, {
                   altText: "Виж заявката",
                   onClick: () => navigate(`/tickets/${updated.id}`),
