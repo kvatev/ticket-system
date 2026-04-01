@@ -325,7 +325,7 @@ export default function ChannelDetailPage() {
           <div className="flex flex-wrap gap-1 mt-2">
             {members?.map((m) => (
               <Badge key={m.id} variant="secondary" className="text-xs">
-                {(m as any).profiles?.full_name ?? "—"}
+                {(m as any).profile?.full_name ?? "—"}
                 {m.role === "admin" && " ★"}
               </Badge>
             ))}
