@@ -21,6 +21,8 @@ import {
   Megaphone,
   ScrollText,
   Bell,
+  FileText,
+  Hash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,6 +48,8 @@ const navItems: NavItem[] = [
   { to: "/tickets/department", label: "Опашка на отдела", icon: FolderOpen, roles: ["staff", "maintenance", "support"] },
   { to: "/tickets/new", label: "Нова заявка", icon: PlusCircle, roles: ["admin", "staff", "user", "maintenance", "support"] },
   { to: "/announcements", label: "Съобщения", icon: Bell, roles: ["admin", "staff", "user", "maintenance", "support"] },
+  { to: "/orders", label: "Заповеди", icon: FileText, roles: ["admin", "staff", "user", "maintenance", "support"] },
+  { to: "/channels", label: "Канали", icon: Hash, roles: ["admin", "staff", "user", "maintenance", "support"] },
   { to: "/admin/users", label: "Потребители", icon: Users, roles: ["admin"] },
   { to: "/admin/departments", label: "Отдели", icon: Building2, roles: ["admin"] },
   { to: "/admin/roles", label: "Роли и права", icon: Shield, roles: ["admin"] },
