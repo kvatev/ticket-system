@@ -13,6 +13,7 @@ type Mode = "login" | "register" | "forgot";
 
 export default function LoginPage() {
   const { signIn } = useAuth();
+  const { settings } = useSystemSettings();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
