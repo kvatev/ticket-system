@@ -73,6 +73,11 @@ const App = () => (
               <Route path="/tickets/:id" element={<TicketDetailPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/announcements" element={<AnnouncementsListPage />} />
+              <Route path="/orders" element={<OrdersListPage />} />
+              <Route path="/orders/new" element={<CreateOrderPage />} />
+              <Route path="/orders/:id" element={<OrderDetailPage />} />
+              <Route path="/channels" element={<ChannelsListPage />} />
+              <Route path="/channels/:id" element={<ChannelDetailPage />} />
               <Route path="/admin/users" element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <UsersManagementPage />
