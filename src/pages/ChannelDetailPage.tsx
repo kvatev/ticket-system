@@ -52,10 +52,13 @@ export default function ChannelDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("channel_members")
-        .select("*, profiles!channel_members_user_id_fkey(full_name, email)")
+        .select("*")
         .eq("channel_id", id!);
       if (error) throw error;
-      return data;
+      const uids = data.map((m: any) => m.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", uids);
+      const pMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.user_id, p]));
+      return data.map((m: any) => ({ ...m, profile: pMap[m.user_id] ?? {} }));
     },
     enabled: !!id,
   });
