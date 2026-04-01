@@ -87,7 +87,7 @@ export default function OrderDetailPage() {
             {isExpired ? <Badge variant="destructive">Изтекла</Badge> : <Badge variant="secondary">Активна</Badge>}
           </div>
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mt-2">
-            <span>Издадена от: {(order as any).profiles?.full_name ?? "—"}</span>
+            <span>Издадена от: {order.creator_name}</span>
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {format(new Date(order.created_at), "dd MMM yyyy, HH:mm", { locale: bg })}

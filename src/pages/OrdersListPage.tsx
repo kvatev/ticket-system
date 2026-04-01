@@ -125,7 +125,7 @@ export default function OrdersListPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>От: {(order as any).profiles?.full_name ?? "—"}</span>
+                  <span>От: {order.creator_name}</span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {format(new Date(order.created_at), "dd MMM yyyy", { locale: bg })}

@@ -89,11 +89,14 @@ export default function ChannelDetailPage() {
       const postIds = posts.map((p) => p.id);
       const { data, error } = await supabase
         .from("channel_comments")
-        .select("*, profiles!channel_comments_user_id_fkey(full_name)")
+        .select("*")
         .in("post_id", postIds)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data;
+      const uids = [...new Set(data.map((c: any) => c.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", uids);
+      const pMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.user_id, p.full_name]));
+      return data.map((c: any) => ({ ...c, author_name: pMap[c.user_id] ?? "—" }));
     },
     enabled: !!posts?.length,
   });
