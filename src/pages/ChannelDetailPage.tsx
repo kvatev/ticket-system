@@ -420,7 +420,7 @@ export default function ChannelDetailPage() {
                           return (
                             <div key={c.id}>
                               <div className="flex items-baseline gap-2">
-                                <span className="text-xs font-medium text-foreground">{(c as any).profiles?.full_name ?? "—"}</span>
+                                <span className="text-xs font-medium text-foreground">{(c as any).author_name ?? "—"}</span>
                                 <span className="text-[10px] text-muted-foreground">{format(new Date(c.created_at), "dd MMM, HH:mm", { locale: bg })}</span>
                               </div>
                               <p className="text-xs whitespace-pre-wrap">{c.content}</p>
