@@ -17,11 +17,13 @@ export default function OrderDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, profiles!orders_created_by_fkey(full_name)")
+        .select("*")
         .eq("id", id!)
         .single();
       if (error) throw error;
-      return data;
+      // Get creator name
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", data.created_by).single();
+      return { ...data, creator_name: profile?.full_name ?? "—" };
     },
     enabled: !!id,
   });
