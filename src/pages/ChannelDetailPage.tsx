@@ -388,7 +388,7 @@ export default function ChannelDetailPage() {
                 <CardContent className="pt-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-medium text-foreground">{(post as any).profiles?.full_name ?? "—"}</p>
+                      <p className="text-sm font-medium text-foreground">{(post as any).author_name ?? "—"}</p>
                       <p className="text-xs text-muted-foreground">{format(new Date(post.created_at), "dd MMM yyyy, HH:mm", { locale: bg })}</p>
                     </div>
                     {(post.user_id === user?.id || role === "admin") && (
