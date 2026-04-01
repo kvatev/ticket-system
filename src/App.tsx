@@ -22,6 +22,11 @@ import AnnouncementsPage from "@/pages/admin/AnnouncementsPage";
 import AuditLogPage from "@/pages/admin/AuditLogPage";
 import AnnouncementsListPage from "@/pages/AnnouncementsListPage";
 import ProfilePage from "@/pages/ProfilePage";
+import OrdersListPage from "@/pages/OrdersListPage";
+import CreateOrderPage from "@/pages/CreateOrderPage";
+import OrderDetailPage from "@/pages/OrderDetailPage";
+import ChannelsListPage from "@/pages/ChannelsListPage";
+import ChannelDetailPage from "@/pages/ChannelDetailPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
