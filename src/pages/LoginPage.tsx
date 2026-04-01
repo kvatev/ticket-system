@@ -99,9 +99,9 @@ export default function LoginPage() {
             <School className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">
-            СУ „Константин Петканов"
+            {settings.school_name}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Система за заявки</p>
+          <p className="mt-1 text-sm text-muted-foreground">{settings.school_subtitle}</p>
           <p className="mt-2 text-xs text-muted-foreground">
             Само с <span className="font-semibold text-foreground">@edu.mon.bg</span> акаунт
           </p>
