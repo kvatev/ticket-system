@@ -69,11 +69,14 @@ export default function ChannelDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("channel_posts")
-        .select("*, profiles!channel_posts_user_id_fkey(full_name)")
+        .select("*")
         .eq("channel_id", id!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      const uids = [...new Set(data.map((p: any) => p.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", uids);
+      const pMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.user_id, p.full_name]));
+      return data.map((p: any) => ({ ...p, author_name: pMap[p.user_id] ?? "—" }));
     },
     enabled: !!id,
   });
