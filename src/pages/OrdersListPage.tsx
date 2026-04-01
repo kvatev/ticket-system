@@ -28,10 +28,14 @@ export default function OrdersListPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, profiles!orders_created_by_fkey(full_name)")
+        .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      // Fetch creator names
+      const userIds = [...new Set(data.map((o: any) => o.created_by))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+      const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.user_id, p.full_name]));
+      return data.map((o: any) => ({ ...o, creator_name: profileMap[o.created_by] ?? "—" }));
     },
   });
 
