@@ -172,6 +172,42 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Moon className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-lg">Тема по подразбиране</CardTitle>
+          </div>
+          <CardDescription>Изберете коя тема да се зарежда по подразбиране за всички потребители.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={settings.default_theme || "light"}
+            onValueChange={async (value) => {
+              const { error } = await updateSetting("default_theme", value);
+              if (error) {
+                toast.error("Грешка при запазване.");
+              } else {
+                toast.success(`Темата по подразбиране е зададена на ${value === "dark" ? "тъмна" : "светла"}.`);
+                logAuditAction("Промяна на тема по подразбиране", "settings", undefined, { default_theme: value });
+              }
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light">
+                <span className="flex items-center gap-2"><Sun className="h-4 w-4" /> Светла</span>
+              </SelectItem>
+              <SelectItem value="dark">
+                <span className="flex items-center gap-2"><Moon className="h-4 w-4" /> Тъмна</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
     </div>
   );
 }

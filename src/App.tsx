@@ -47,8 +47,23 @@ function LoginRedirect() {
   return <LoginPage />;
 }
 
-const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+function useDefaultTheme() {
+  const [defaultTheme, setDefaultTheme] = useState<string>("light");
+  useEffect(() => {
+    // Only apply if user hasn't manually chosen a theme
+    const userChose = localStorage.getItem("theme");
+    if (userChose) return;
+    supabase.from("system_settings").select("value").eq("key", "default_theme").maybeSingle().then(({ data }) => {
+      if (data?.value) setDefaultTheme(data.value);
+    });
+  }, []);
+  return defaultTheme;
+}
+
+const App = () => {
+  const defaultTheme = useDefaultTheme();
+  return (
+  <ThemeProvider attribute="class" defaultTheme={defaultTheme} enableSystem={false}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
       <Toaster />
