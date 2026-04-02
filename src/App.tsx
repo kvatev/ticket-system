@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
@@ -45,8 +47,23 @@ function LoginRedirect() {
   return <LoginPage />;
 }
 
-const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+function useDefaultTheme() {
+  const [defaultTheme, setDefaultTheme] = useState<string>("light");
+  useEffect(() => {
+    // Only apply if user hasn't manually chosen a theme
+    const userChose = localStorage.getItem("theme");
+    if (userChose) return;
+    supabase.from("system_settings").select("value").eq("key", "default_theme").maybeSingle().then(({ data }) => {
+      if (data?.value) setDefaultTheme(data.value);
+    });
+  }, []);
+  return defaultTheme;
+}
+
+const App = () => {
+  const defaultTheme = useDefaultTheme();
+  return (
+  <ThemeProvider attribute="class" defaultTheme={defaultTheme} enableSystem={false}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
       <Toaster />
@@ -121,6 +138,7 @@ const App = () => (
       </TooltipProvider>
     </QueryClientProvider>
   </ThemeProvider>
-);
+  );
+};
 
 export default App;
