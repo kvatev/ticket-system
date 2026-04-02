@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Settings, Loader2, Upload, Trash2, School } from "lucide-react";
+import { Settings, Loader2, Upload, Trash2, School, Moon, Sun } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { logAuditAction } from "@/lib/auditLog";
 import { supabase } from "@/integrations/supabase/client";
 
