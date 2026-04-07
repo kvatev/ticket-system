@@ -199,7 +199,9 @@ export default function ChannelsListPage() {
         <p className="py-12 text-center text-muted-foreground">Нямате канали. Създайте нов или се присъединете с код.</p>
       ) : (() => {
         const q = search.trim().toLowerCase();
-        const filtered = q ? channels.filter(ch => ch.name.toLowerCase().includes(q) || (ch.description ?? "").toLowerCase().includes(q)) : channels;
+        const filtered = q ? channels.filter(ch => ch.name.toLowerCase().includes(q) || (ch.description ?? "").toLowerCase().includes(q)) : [...channels];
+        const getMemberCount = (ch: any) => (ch.channel_members as any)?.[0]?.count ?? 0;
+        filtered.sort((a, b) => sortBy === "members" ? getMemberCount(b) - getMemberCount(a) : sortBy === "oldest" ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime() : new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         return !filtered.length ? (
           <p className="py-12 text-center text-muted-foreground">Няма намерени канали за „{search.trim()}"</p>
         ) : (
