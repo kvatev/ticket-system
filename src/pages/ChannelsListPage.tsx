@@ -168,11 +168,26 @@ export default function ChannelsListPage() {
         </div>
       </div>
 
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Търсене по име или описание..."
+          className="pl-9"
+        />
+      </div>
+
       {isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : !channels?.length ? (
         <p className="py-12 text-center text-muted-foreground">Нямате канали. Създайте нов или се присъединете с код.</p>
-      ) : (
+      ) : (() => {
+        const q = search.trim().toLowerCase();
+        const filtered = q ? channels.filter(ch => ch.name.toLowerCase().includes(q) || (ch.description ?? "").toLowerCase().includes(q)) : channels;
+        return !filtered.length ? (
+          <p className="py-12 text-center text-muted-foreground">Няма намерени канали за „{search.trim()}"</p>
+        ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {channels.map((ch) => (
             <Card key={ch.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/channels/${ch.id}`)}>
