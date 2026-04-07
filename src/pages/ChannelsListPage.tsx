@@ -29,6 +29,7 @@ export default function ChannelsListPage() {
   const [description, setDescription] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "members">("newest");
 
   const { data: channels, isLoading } = useQuery({
     queryKey: ["channels"],
