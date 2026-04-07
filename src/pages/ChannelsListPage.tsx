@@ -189,7 +189,7 @@ export default function ChannelsListPage() {
           <p className="py-12 text-center text-muted-foreground">Няма намерени канали за „{search.trim()}"</p>
         ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {channels.map((ch) => (
+          {filtered.map((ch) => (
             <Card key={ch.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/channels/${ch.id}`)}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
@@ -217,7 +217,8 @@ export default function ChannelsListPage() {
             </Card>
           ))}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
