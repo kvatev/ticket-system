@@ -27,6 +27,7 @@ export default function ChannelsListPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [search, setSearch] = useState("");
 
   const { data: channels, isLoading } = useQuery({
     queryKey: ["channels"],
