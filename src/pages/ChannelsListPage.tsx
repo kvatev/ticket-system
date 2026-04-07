@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Hash, Users, KeyRound, Loader2, Trash2, Search } from "lucide-react";
+import { Plus, Hash, Users, KeyRound, Loader2, Trash2, Search, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logAuditAction } from "@/lib/auditLog";
 
@@ -28,6 +29,7 @@ export default function ChannelsListPage() {
   const [description, setDescription] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "members">("newest");
 
   const { data: channels, isLoading } = useQuery({
     queryKey: ["channels"],
@@ -168,14 +170,27 @@ export default function ChannelsListPage() {
         </div>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Търсене по име или описание..."
-          className="pl-9"
-        />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Търсене по име или описание..."
+            className="pl-9"
+          />
+        </div>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <ArrowUpDown className="mr-2 h-4 w-4 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Най-нови първо</SelectItem>
+            <SelectItem value="oldest">Най-стари първо</SelectItem>
+            <SelectItem value="members">По брой членове</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
@@ -184,7 +199,9 @@ export default function ChannelsListPage() {
         <p className="py-12 text-center text-muted-foreground">Нямате канали. Създайте нов или се присъединете с код.</p>
       ) : (() => {
         const q = search.trim().toLowerCase();
-        const filtered = q ? channels.filter(ch => ch.name.toLowerCase().includes(q) || (ch.description ?? "").toLowerCase().includes(q)) : channels;
+        const filtered = q ? channels.filter(ch => ch.name.toLowerCase().includes(q) || (ch.description ?? "").toLowerCase().includes(q)) : [...channels];
+        const getMemberCount = (ch: any) => (ch.channel_members as any)?.[0]?.count ?? 0;
+        filtered.sort((a, b) => sortBy === "members" ? getMemberCount(b) - getMemberCount(a) : sortBy === "oldest" ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime() : new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         return !filtered.length ? (
           <p className="py-12 text-center text-muted-foreground">Няма намерени канали за „{search.trim()}"</p>
         ) : (
