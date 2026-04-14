@@ -47,6 +47,12 @@ export default function UsersManagementPage() {
   const [resetNewPassword, setResetNewPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
 
+  // PIN generation
+  const [generatedPin, setGeneratedPin] = useState<string | null>(null);
+  const [pinDialogUserId, setPinDialogUserId] = useState<string | null>(null);
+  const [pinDialogName, setPinDialogName] = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
+
   // Search & filter
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("all");
