@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
@@ -7,9 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, School, KeyRound, UserPlus } from "lucide-react";
+import { Loader2, School, KeyRound, UserPlus, Hash } from "lucide-react";
 
-type Mode = "login" | "register" | "forgot";
+type Mode = "login" | "register" | "forgot" | "pin";
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<Mode>("login");
 
@@ -35,6 +37,46 @@ export default function LoginPage() {
     if (error) {
       const desc = error.message.includes("деактивиран") ? error.message : "Невалиден имейл или парола.";
       toast.error("Грешка при вход", { description: desc });
+    }
+    setLoading(false);
+  };
+
+  const handlePinLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !pin) {
+      toast.error("Моля, въведете имейл и ПИН код.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pin-login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ email, pin }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error("Грешка при вход с ПИН", { description: result.error });
+      } else if (result.session) {
+        // Set the session from the edge function response
+        await supabase.auth.setSession({
+          access_token: result.session.access_token,
+          refresh_token: result.session.refresh_token,
+        });
+        toast.success("Вход успешен!", {
+          description: "Моля, сменете паролата си веднага от профила.",
+        });
+        // Navigate to profile for password change
+        window.location.href = "/profile?change_password=true";
+      }
+    } catch (err: any) {
+      toast.error("Грешка при вход с ПИН", { description: err.message });
     }
     setLoading(false);
   };
@@ -89,6 +131,7 @@ export default function LoginPage() {
     login: "Вход в системата",
     register: "Регистрация",
     forgot: "Забравена парола",
+    pin: "Вход с ПИН код",
   };
 
   return (
@@ -127,6 +170,28 @@ export default function LoginPage() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Изпрати линк
+                </Button>
+                <Button type="button" variant="ghost" className="w-full" onClick={() => setMode("login")}>
+                  Обратно към вход
+                </Button>
+              </form>
+            )}
+
+            {mode === "pin" && (
+              <form onSubmit={handlePinLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pinEmail">Имейл адрес</Label>
+                  <Input id="pinEmail" type="email" placeholder="krasimir.vatev@edu.mon.bg" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pinCode">ПИН код</Label>
+                  <Input id="pinCode" placeholder="Въведете 6-цифрения ПИН" value={pin} onChange={(e) => setPin(e.target.value)} required maxLength={6} className="text-center text-lg tracking-widest" />
+                  <p className="text-xs text-muted-foreground">ПИН кодът е предоставен от администратор</p>
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Hash className="mr-2 h-4 w-4" />
+                  Вход с ПИН
                 </Button>
                 <Button type="button" variant="ghost" className="w-full" onClick={() => setMode("login")}>
                   Обратно към вход
@@ -176,6 +241,10 @@ export default function LoginPage() {
                   Вход
                 </Button>
                 <div className="flex flex-col gap-2">
+                  <Button type="button" variant="ghost" className="w-full text-sm text-muted-foreground" onClick={() => setMode("pin")}>
+                    <Hash className="mr-2 h-4 w-4" />
+                    Вход с ПИН код
+                  </Button>
                   <Button type="button" variant="ghost" className="w-full text-sm text-muted-foreground" onClick={() => setMode("register")}>
                     Нямате акаунт? Регистрация
                   </Button>

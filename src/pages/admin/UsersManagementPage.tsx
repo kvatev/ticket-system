@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search, Trash2, KeyRound } from "lucide-react";
+import { UserPlus, Loader2, Pencil, Ban, CheckCircle, Search, Trash2, KeyRound, Hash, Copy } from "lucide-react";
 import { logAuditAction } from "@/lib/auditLog";
 
 interface CustomRole {
@@ -46,6 +46,12 @@ export default function UsersManagementPage() {
   const [resetPasswordName, setResetPasswordName] = useState("");
   const [resetNewPassword, setResetNewPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
+
+  // PIN generation
+  const [generatedPin, setGeneratedPin] = useState<string | null>(null);
+  const [pinDialogUserId, setPinDialogUserId] = useState<string | null>(null);
+  const [pinDialogName, setPinDialogName] = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
 
   // Search & filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -276,6 +282,32 @@ export default function UsersManagementPage() {
     setResetLoading(false);
   };
 
+  const handleGeneratePin = async (userId: string, userName: string) => {
+    setPinLoading(true);
+    setPinDialogUserId(userId);
+    setPinDialogName(userName);
+    setGeneratedPin(null);
+    try {
+      const pin = String(Math.floor(100000 + Math.random() * 900000));
+      const { error } = await supabase.from("password_pins").insert({
+        user_id: userId,
+        pin,
+      } as any);
+      if (error) {
+        toast.error("Грешка при генериране на ПИН", { description: error.message });
+        setPinDialogUserId(null);
+      } else {
+        setGeneratedPin(pin);
+        logAuditAction("Генериране на ПИН код", "user", userId, { name: userName });
+        toast.success("ПИН кодът е генериран!");
+      }
+    } catch (err: any) {
+      toast.error("Грешка", { description: err.message });
+      setPinDialogUserId(null);
+    }
+    setPinLoading(false);
+  };
+
   const filteredProfiles = profiles.filter((p) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch = !q || p.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
@@ -449,6 +481,16 @@ export default function UsersManagementPage() {
                             >
                               <KeyRound className="h-3.5 w-3.5" />
                             </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => handleGeneratePin(p.user_id, p.full_name)}
+                              title="Генерирай ПИН код"
+                              disabled={pinLoading}
+                            >
+                              <Hash className="h-3.5 w-3.5" />
+                            </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button
@@ -542,6 +584,42 @@ export default function UsersManagementPage() {
               {resetLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Смени паролата
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* PIN Code Dialog */}
+      <Dialog open={!!pinDialogUserId} onOpenChange={(open) => { if (!open) { setPinDialogUserId(null); setGeneratedPin(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>ПИН код за {pinDialogName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {pinLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : generatedPin ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Предайте този ПИН код на потребителя. С него може да влезе в системата и да зададе нова парола. Кодът е валиден 24 часа.
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-4xl font-bold tracking-[0.3em] text-foreground">{generatedPin}</span>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedPin);
+                      toast.success("ПИН кодът е копиран!");
+                    }}
+                    title="Копирай"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>
