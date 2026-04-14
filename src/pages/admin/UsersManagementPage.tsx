@@ -282,7 +282,33 @@ export default function UsersManagementPage() {
     setResetLoading(false);
   };
 
-  const filteredProfiles = profiles.filter((p) => {
+  const handleGeneratePin = async (userId: string, userName: string) => {
+    setPinLoading(true);
+    setPinDialogUserId(userId);
+    setPinDialogName(userName);
+    setGeneratedPin(null);
+    try {
+      const pin = String(Math.floor(100000 + Math.random() * 900000));
+      const { error } = await supabase.from("password_pins").insert({
+        user_id: userId,
+        pin,
+      } as any);
+      if (error) {
+        toast.error("Грешка при генериране на ПИН", { description: error.message });
+        setPinDialogUserId(null);
+      } else {
+        setGeneratedPin(pin);
+        logAuditAction("Генериране на ПИН код", "user", userId, { name: userName });
+        toast.success("ПИН кодът е генериран!");
+      }
+    } catch (err: any) {
+      toast.error("Грешка", { description: err.message });
+      setPinDialogUserId(null);
+    }
+    setPinLoading(false);
+  };
+
+
     const q = searchQuery.toLowerCase();
     const matchesSearch = !q || p.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
     const matchesRole = filterRole === "all" || userRoles[p.user_id]?.custom_role_id === filterRole;
