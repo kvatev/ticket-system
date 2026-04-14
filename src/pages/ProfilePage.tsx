@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,10 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, Lock, Camera, Loader2 } from "lucide-react";
+import PasswordStrengthIndicator, { validatePasswordRequirements } from "@/components/PasswordStrengthIndicator";
+import { useSearchParams } from "react-router-dom";
 
 export default function ProfilePage() {
   const { profile, user, updateProfile } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const mustChangePassword = searchParams.get("change_password") === "true";
 
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
   const [nameLoading, setNameLoading] = useState(false);
@@ -25,6 +30,16 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile?.full_name) setFullName(profile.full_name);
   }, [profile?.full_name]);
+
+  useEffect(() => {
+    if (mustChangePassword) {
+      toast({
+        title: "Смяна на парола",
+        description: "Моля, задайте нова парола за вашия акаунт.",
+        variant: "destructive",
+      });
+    }
+  }, [mustChangePassword]);
 
   const getAvatarUrl = () => {
     if (!profile?.avatar_url) return null;
@@ -49,7 +64,6 @@ export default function ProfilePage() {
     const ext = file.name.split(".").pop();
     const filePath = `${user.id}/avatar.${ext}`;
 
-    // Delete old avatar if exists
     if (profile?.avatar_url) {
       await supabase.storage.from("avatars").remove([profile.avatar_url]);
     }
@@ -65,7 +79,6 @@ export default function ProfilePage() {
       toast({ title: "Успешно", description: "Профилната снимка е обновена." });
     }
     setAvatarLoading(false);
-    // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -84,24 +97,31 @@ export default function ProfilePage() {
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword.length < 6) {
-      toast({ title: "Грешка", description: "Паролата трябва да е поне 6 символа.", variant: "destructive" });
+    const errors = validatePasswordRequirements(newPassword);
+    if (errors.length > 0) {
+      toast({ title: "Грешка", description: errors.join(", "), variant: "destructive" });
       return;
     }
     if (newPassword !== confirmPassword) {
       toast({ title: "Грешка", description: "Паролите не съвпадат.", variant: "destructive" });
       return;
     }
+
     setPassLoading(true);
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: profile?.email ?? "",
-      password: currentPassword,
-    });
-    if (signInError) {
-      setPassLoading(false);
-      toast({ title: "Грешка", description: "Текущата парола е грешна.", variant: "destructive" });
-      return;
+
+    // If came from PIN login, skip current password verification
+    if (!mustChangePassword) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: profile?.email ?? "",
+        password: currentPassword,
+      });
+      if (signInError) {
+        setPassLoading(false);
+        toast({ title: "Грешка", description: "Текущата парола е грешна.", variant: "destructive" });
+        return;
+      }
     }
+
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setPassLoading(false);
     if (error) {
@@ -111,6 +131,10 @@ export default function ProfilePage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      // Remove the query param
+      if (mustChangePassword) {
+        window.history.replaceState({}, "", "/profile");
+      }
     }
   };
 
@@ -119,6 +143,12 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold text-foreground">Профил</h1>
+
+      {mustChangePassword && (
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+          ⚠️ Влязохте с ПИН код. Моля, задайте нова парола преди да продължите.
+        </div>
+      )}
 
       {/* Avatar */}
       <Card>
@@ -200,27 +230,39 @@ export default function ProfilePage() {
       </Card>
 
       {/* Password */}
-      <Card>
+      <Card className={mustChangePassword ? "ring-2 ring-destructive" : ""}>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-muted-foreground" />
-            <CardTitle className="text-lg">Смяна на парола</CardTitle>
+            <CardTitle className="text-lg">
+              {mustChangePassword ? "Задайте нова парола" : "Смяна на парола"}
+            </CardTitle>
           </div>
-          <CardDescription>Въведете текущата и новата парола.</CardDescription>
+          <CardDescription>
+            {mustChangePassword
+              ? "Задължително е да зададете нова парола."
+              : "Въведете текущата и новата парола."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordUpdate} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Текуща парола</Label>
-              <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
-            </div>
+            {!mustChangePassword && (
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Текуща парола</Label>
+                <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="newPassword">Нова парола</Label>
               <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={6} required />
+              <PasswordStrengthIndicator password={newPassword} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Потвърдете новата парола</Label>
               <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={6} required />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-xs text-destructive">Паролите не съвпадат</p>
+              )}
             </div>
             <Button type="submit" disabled={passLoading}>
               {passLoading ? "Промяна..." : "Промени парола"}
