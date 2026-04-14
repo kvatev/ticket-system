@@ -308,7 +308,7 @@ export default function UsersManagementPage() {
     setPinLoading(false);
   };
 
-
+  const filteredProfiles = profiles.filter((p) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch = !q || p.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
     const matchesRole = filterRole === "all" || userRoles[p.user_id]?.custom_role_id === filterRole;
