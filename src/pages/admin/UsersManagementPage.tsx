@@ -481,6 +481,16 @@ export default function UsersManagementPage() {
                             >
                               <KeyRound className="h-3.5 w-3.5" />
                             </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => handleGeneratePin(p.user_id, p.full_name)}
+                              title="Генерирай ПИН код"
+                              disabled={pinLoading}
+                            >
+                              <Hash className="h-3.5 w-3.5" />
+                            </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button
