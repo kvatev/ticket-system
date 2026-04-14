@@ -587,6 +587,42 @@ export default function UsersManagementPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* PIN Code Dialog */}
+      <Dialog open={!!pinDialogUserId} onOpenChange={(open) => { if (!open) { setPinDialogUserId(null); setGeneratedPin(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>ПИН код за {pinDialogName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {pinLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : generatedPin ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Предайте този ПИН код на потребителя. С него може да влезе в системата и да зададе нова парола. Кодът е валиден 24 часа.
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-4xl font-bold tracking-[0.3em] text-foreground">{generatedPin}</span>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedPin);
+                      toast.success("ПИН кодът е копиран!");
+                    }}
+                    title="Копирай"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
