@@ -6,6 +6,7 @@ import { ToastAction } from "@/components/ui/toast";
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { pushNotification } from "@/hooks/useNotificationStore";
+import { useSoundPreferences } from "@/hooks/useSoundPreferences";
 
 const STORAGE_KEY = "last-seen-ticket-time";
 
@@ -13,26 +14,17 @@ export function useUnreadTickets() {
   const { user, role, profile } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const userInteractedRef = useRef(false);
+  const { playPreview, isDndActive } = useSoundPreferences();
   const lastSeenRef = useRef<string>(
     localStorage.getItem(STORAGE_KEY) || new Date().toISOString()
   );
 
-  // Create audio element once
+  // Unlock audio context on first user interaction (browsers require it)
   useEffect(() => {
-    const audio = new Audio("/notification.mp3");
-    audio.volume = 0.5;
-    audioRef.current = audio;
-
-    // Track user interaction to unlock audio playback
     const unlockAudio = () => {
       userInteractedRef.current = true;
-      if (audioRef.current) {
-        audioRef.current.load();
-      }
     };
-
     document.addEventListener("click", unlockAudio, { once: true });
     document.addEventListener("keydown", unlockAudio, { once: true });
     document.addEventListener("touchstart", unlockAudio, { once: true });
@@ -40,10 +32,8 @@ export function useUnreadTickets() {
     // Listen for messages from the service worker (e.g. push received → play sound)
     const handleSWMessage = (event: MessageEvent) => {
       if (event.data?.type === "PLAY_NOTIFICATION_SOUND") {
-        if (audioRef.current && profile?.sound_enabled !== false) {
-          const sound = audioRef.current.cloneNode() as HTMLAudioElement;
-          sound.volume = 0.5;
-          sound.play().catch(() => {});
+        if (profile?.sound_enabled !== false && !isDndActive()) {
+          playPreview();
         }
       } else if (event.data?.type === "NAVIGATE" && event.data?.url) {
         navigate(event.data.url);
@@ -57,19 +47,13 @@ export function useUnreadTickets() {
       document.removeEventListener("touchstart", unlockAudio);
       navigator.serviceWorker?.removeEventListener("message", handleSWMessage);
     };
-  }, [navigate, profile?.sound_enabled]);
+  }, [navigate, profile?.sound_enabled, playPreview, isDndActive]);
 
   const playSound = useCallback(() => {
     if (!profile?.sound_enabled) return;
-    if (!audioRef.current) return;
-
-    // Clone the audio to allow overlapping plays
-    const sound = audioRef.current.cloneNode() as HTMLAudioElement;
-    sound.volume = 0.5;
-    sound.play().catch(() => {
-      // Autoplay blocked – ignored
-    });
-  }, [profile?.sound_enabled]);
+    if (isDndActive()) return; // Quiet hours
+    playPreview();
+  }, [profile?.sound_enabled, playPreview, isDndActive]);
 
   const fetchUnread = useCallback(async () => {
     if (!user || !profile) return;
