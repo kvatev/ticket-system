@@ -32,6 +32,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useUnreadTickets } from "@/hooks/useUnreadTickets";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
+import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 
 interface NavItem {
   to: string;
@@ -223,6 +224,8 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      <NotificationPermissionPrompt />
     </div>
   );
 }
