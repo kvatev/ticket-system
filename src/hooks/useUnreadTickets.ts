@@ -28,7 +28,6 @@ export function useUnreadTickets() {
     // Track user interaction to unlock audio playback
     const unlockAudio = () => {
       userInteractedRef.current = true;
-      // Pre-load audio after first interaction
       if (audioRef.current) {
         audioRef.current.load();
       }
@@ -38,12 +37,27 @@ export function useUnreadTickets() {
     document.addEventListener("keydown", unlockAudio, { once: true });
     document.addEventListener("touchstart", unlockAudio, { once: true });
 
+    // Listen for messages from the service worker (e.g. push received → play sound)
+    const handleSWMessage = (event: MessageEvent) => {
+      if (event.data?.type === "PLAY_NOTIFICATION_SOUND") {
+        if (audioRef.current && profile?.sound_enabled !== false) {
+          const sound = audioRef.current.cloneNode() as HTMLAudioElement;
+          sound.volume = 0.5;
+          sound.play().catch(() => {});
+        }
+      } else if (event.data?.type === "NAVIGATE" && event.data?.url) {
+        navigate(event.data.url);
+      }
+    };
+    navigator.serviceWorker?.addEventListener("message", handleSWMessage);
+
     return () => {
       document.removeEventListener("click", unlockAudio);
       document.removeEventListener("keydown", unlockAudio);
       document.removeEventListener("touchstart", unlockAudio);
+      navigator.serviceWorker?.removeEventListener("message", handleSWMessage);
     };
-  }, []);
+  }, [navigate, profile?.sound_enabled]);
 
   const playSound = useCallback(() => {
     if (!profile?.sound_enabled) return;

@@ -16,11 +16,25 @@ self.addEventListener("push", (event) => {
     badge: "/favicon.png",
     tag: data.tag || "default",
     data: { url: data.url || "/" },
-    vibrate: [200, 100, 200],
+    vibrate: [300, 100, 300, 100, 300],
     requireInteraction: true,
+    silent: false,
+    renotify: true,
+    // sound is supported on some Android browsers
+    sound: "/notification.mp3",
   };
 
-  event.waitUntil(self.registration.showNotification(data.title, options));
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(data.title, options),
+      // Notify any open clients to play sound (for desktop when tab is open)
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: "PLAY_NOTIFICATION_SOUND" });
+        });
+      }),
+    ])
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {
@@ -29,8 +43,10 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // Try to focus an existing window and navigate it
       for (const client of clientList) {
-        if (client.url.includes(url) && "focus" in client) {
+        if ("focus" in client) {
+          client.postMessage({ type: "NAVIGATE", url });
           return client.focus();
         }
       }
