@@ -7,6 +7,7 @@ import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { pushNotification } from "@/hooks/useNotificationStore";
 import { useSoundPreferences } from "@/hooks/useSoundPreferences";
+import { setAppBadge } from "@/lib/appBadge";
 
 const STORAGE_KEY = "last-seen-ticket-time";
 
@@ -174,6 +175,11 @@ export function useUnreadTickets() {
     localStorage.setItem(STORAGE_KEY, now);
     setUnreadCount(0);
   }, []);
+
+  // Sync app icon badge with unread count
+  useEffect(() => {
+    setAppBadge(unreadCount).catch(() => {});
+  }, [unreadCount]);
 
   return { unreadCount, markAllRead, playSound };
 }
